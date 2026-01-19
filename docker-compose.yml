@@ -1,0 +1,28 @@
+services:
+  # 1. O Site (Django)
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app  # Sincroniza a pasta local com o container (importante para salvar o sqlite)
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  # 2. O Trabalhador (Celery - Envia E-mails)
+  worker:
+    build: .
+    # Comando Linux para rodar o celery (não precisa de --pool=solo aqui, pois Linux é nativo)
+    command: celery -A core worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - web
+
+  # 3. O Banco de Memória (Redis)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
