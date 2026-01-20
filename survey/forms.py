@@ -21,7 +21,7 @@ class PesquisaForm(forms.ModelForm):
     candidatos_poderia_votar = forms.MultipleChoiceField(choices=CANDIDATOS_OPTS, widget=forms.CheckboxSelectMultiple)
     candidatos_rejeicao = forms.MultipleChoiceField(choices=CANDIDATOS_OPTS, widget=forms.CheckboxSelectMultiple)
     candidato_voto_hoje = forms.ChoiceField(choices=CANDIDATOS_OPTS, widget=forms.RadioSelect)
-    candidato_governador = forms.ChoiceField(choices=GOV_OPTS, widget=forms.RadioSelect)
+    candidato_governador = forms.MultipleChoiceField(choices=GOV_OPTS, widget=forms.CheckboxSelectMultiple)
 
     class Meta:
         model = PesquisaGravatai
