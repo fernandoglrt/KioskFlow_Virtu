@@ -18,11 +18,23 @@ class PesquisaForm(forms.ModelForm):
         ('Branco/Nulo/Outro', 'Branco/Nulo/Outro'),
     ]
 
-    candidatos_poderia_votar = forms.MultipleChoiceField(choices=CANDIDATOS_OPTS, widget=forms.CheckboxSelectMultiple)
-    candidatos_rejeicao = forms.MultipleChoiceField(choices=CANDIDATOS_OPTS, widget=forms.CheckboxSelectMultiple)
-    candidato_voto_hoje = forms.ChoiceField(choices=CANDIDATOS_OPTS, widget=forms.RadioSelect)
-    candidato_governador = forms.MultipleChoiceField(choices=GOV_OPTS, widget=forms.CheckboxSelectMultiple)
+    candidatos_poderia_votar = forms.MultipleChoiceField(
+        label='Entre estes, em quais você PODERIA votar para Deputado?',
+        choices=CANDIDATOS_OPTS,
+        widget=forms.CheckboxSelectMultiple
+    )
 
+    candidatos_rejeicao = forms.MultipleChoiceField(
+        label='Em quais destes você NÃO VOTARIA de jeito nenhum?',
+        choices=CANDIDATOS_OPTS,
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    candidato_voto_hoje = forms.ChoiceField(
+        label='Se a eleição fosse hoje, em quem você votaria?',
+        choices=CANDIDATOS_OPTS,
+        widget=forms.RadioSelect
+    )
     class Meta:
         model = PesquisaGravatai
         fields = '__all__'
@@ -32,19 +44,19 @@ class PesquisaForm(forms.ModelForm):
             'faixa_etaria': 'Qual a sua faixa etária?',
             'escolaridade': 'Qual seu grau de escolaridade?',
             'ocupacao': 'Qual sua ocupação principal atual?',
-
             'candidatos_poderia_votar': 'Entre estes, em quais você PODERIA votar para Deputado?',
             'candidato_voto_hoje': 'Se a eleição fosse hoje, em quem você votaria?',
             'candidatos_rejeicao': 'Em quais destes você NÃO VOTARIA de jeito nenhum?',
             'candidato_governador': 'Para Governador do RS, em quem você vota?',
-
             'renda_familiar': 'Somando tudo, qual a renda média da sua família?',
             'nome': 'Para finalizar, qual seu primeiro nome?',
             'whatsapp': 'Digite seu WhatsApp para receber o resultado:'
         }
         widgets = {
-            'sexo': forms.RadioSelect, 'faixa_etaria': forms.RadioSelect,
-            'escolaridade': forms.RadioSelect, 'ocupacao': forms.RadioSelect,
+            'sexo': forms.RadioSelect,
+            'faixa_etaria': forms.RadioSelect,
+            'escolaridade': forms.RadioSelect,
+            'ocupacao': forms.RadioSelect,
             'renda_familiar': forms.RadioSelect,
             'nome': forms.TextInput(attrs={'placeholder': 'Seu Nome'}),
             'whatsapp': forms.TextInput(attrs={'placeholder': '(XX) XXXXX-XXXX'}),
