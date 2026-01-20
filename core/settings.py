@@ -75,3 +75,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'America/Sao_Paulo'
+CSRF_TRUSTED_ORIGINS = [
+    'https://raiox.virtu-intelligence.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
