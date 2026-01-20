@@ -35,6 +35,12 @@ class PesquisaForm(forms.ModelForm):
         choices=CANDIDATOS_OPTS,
         widget=forms.RadioSelect
     )
+    candidato_governador = forms.ChoiceField(
+        label='Para Governador do RS, em quem você vota?',
+        choices=GOV_OPTS,
+        widget=forms.RadioSelect
+    )
+
     class Meta:
         model = PesquisaGravatai
         fields = '__all__'
@@ -44,11 +50,11 @@ class PesquisaForm(forms.ModelForm):
             'faixa_etaria': 'Qual a sua faixa etária?',
             'escolaridade': 'Qual seu grau de escolaridade?',
             'ocupacao': 'Qual sua ocupação principal atual?',
+            'renda_familiar': 'Somando tudo, qual a renda média da sua família?',
             'candidatos_poderia_votar': 'Entre estes, em quais você PODERIA votar para Deputado?',
             'candidato_voto_hoje': 'Se a eleição fosse hoje, em quem você votaria?',
             'candidatos_rejeicao': 'Em quais destes você NÃO VOTARIA de jeito nenhum?',
             'candidato_governador': 'Para Governador do RS, em quem você vota?',
-            'renda_familiar': 'Somando tudo, qual a renda média da sua família?',
             'nome': 'Para finalizar, qual seu primeiro nome?',
             'whatsapp': 'Digite seu WhatsApp para receber o resultado:'
         }
