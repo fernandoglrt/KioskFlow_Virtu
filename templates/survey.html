@@ -3,7 +3,26 @@
 {% block content %}
 <style>
     body { overflow-x: hidden; }
+    /* Botão "Não Informar" (Estilo Ghost) */
+    .btn-skip {
+        display: block;
+        width: 100%;
+        margin-top: 15px;
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        color: white;
+        padding: 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
 
+    .btn-skip:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: white;
+    }
     .slide-container {
         max-width: 700px;
         margin: 0 auto;
@@ -106,6 +125,13 @@
             {% if field.field.widget.input_type == 'text' %}
                 {{ field }}
                 <script>document.getElementById("{{ field.auto_id }}").className += " form-control-lg-kiosk";</script>
+
+                {% if field.name == 'whatsapp' %}
+                <button type="button" class="btn-skip" onclick="skipFinalSlide()">
+                    Prefiro não informar <i class="fas fa-forward ms-2"></i>
+                </button>
+                {% endif %}
+
             {% else %}
                 <div class="row g-3">
                 {% for choice in field %}
@@ -306,5 +332,15 @@
             }
         }
     });
+    // Função para pular o WhatsApp e enviar
+    function skipFinalSlide() {
+        // Encontra o input de whatsapp
+        const whatsappInput = document.querySelector('input[name="whatsapp"]');
+        if (whatsappInput) {
+            whatsappInput.value = ""; // Garante que está vazio
+        }
+        // Envia o formulário
+        document.getElementById('surveyForm').submit();
+    }
 </script>
 {% endblock %}
