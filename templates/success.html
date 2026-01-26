@@ -1,11 +1,50 @@
 {% extends 'base.html' %}
+
 {% block content %}
 <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
     <div class="kiosk-card text-center p-5 animate__animated animate__zoomIn">
-        <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
-        <h1 class="mt-3 text-primary">Obrigado!</h1>
-        <p class="lead">Seu voto foi computado.</p>
-        <a href="{% url 'survey_home' %}" class="btn btn-outline-success mt-3 rounded-pill px-4">Nova Pesquisa</a>
+
+        <div class="mb-4 animate__animated animate__rotateIn animate__delay-1s">
+            <i class="fas fa-check-circle text-success" style="font-size: 6rem;"></i>
+        </div>
+
+        <h1 class="fw-bold text-primary mb-3">Obrigado!</h1>
+        <h3 class="lead fs-4 text-dark">Resposta computada com sucesso.</h3>
+
+        <p class="text-muted mt-4 small">
+            Reiniciando em <span id="countdown">3</span>s...
+        </p>
+
+        <div class="progress mt-3" style="height: 5px;">
+            <div class="progress-bar bg-success" id="redirectBar" role="progressbar" style="width: 100%"></div>
+        </div>
+
     </div>
 </div>
+
+<script>
+    // Configuração do Tempo (3 segundos = 3000ms)
+    const tempoTotal = 3;
+    let tempoRestante = tempoTotal;
+
+    // Atualiza o contador visual
+    const timer = setInterval(() => {
+        tempoRestante--;
+        document.getElementById('countdown').innerText = tempoRestante;
+
+        if (tempoRestante <= 0) clearInterval(timer);
+    }, 1000);
+
+    // Anima a barra de progresso diminuindo
+    const bar = document.getElementById('redirectBar');
+    bar.style.transition = `width ${tempoTotal}s linear`;
+    setTimeout(() => {
+        bar.style.width = '0%';
+    }, 100); // Pequeno delay para o CSS pegar a transição
+
+    // Redireciona de volta para a Capa (Home)
+    setTimeout(function() {
+        window.location.href = "{% url 'survey_home' %}";
+    }, tempoTotal * 1000);
+</script>
 {% endblock %}
