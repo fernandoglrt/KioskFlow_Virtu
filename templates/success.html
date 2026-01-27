@@ -23,26 +23,27 @@
 </div>
 
 <script>
-    // Configuração do Tempo (3 segundos = 3000ms)
+    // Configura o tempo para 3 segundos
     const tempoTotal = 3;
     let tempoRestante = tempoTotal;
 
-    // Atualiza o contador visual
+    // Contador numérico
     const timer = setInterval(() => {
         tempoRestante--;
-        document.getElementById('countdown').innerText = tempoRestante;
+        const el = document.getElementById('countdown');
+        if(el) el.innerText = tempoRestante;
 
         if (tempoRestante <= 0) clearInterval(timer);
     }, 1000);
 
-    // Anima a barra de progresso diminuindo
+    // Barra visual
     const bar = document.getElementById('redirectBar');
-    bar.style.transition = `width ${tempoTotal}s linear`;
-    setTimeout(() => {
-        bar.style.width = '0%';
-    }, 100); // Pequeno delay para o CSS pegar a transição
+    if(bar) {
+        bar.style.transition = `width ${tempoTotal}s linear`;
+        setTimeout(() => { bar.style.width = '0%'; }, 100);
+    }
 
-    // Redireciona de volta para a Capa (Home)
+    // Redirecionamento
     setTimeout(function() {
         window.location.href = "{% url 'survey_home' %}";
     }, tempoTotal * 1000);

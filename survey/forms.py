@@ -9,6 +9,7 @@ class PesquisaForm(forms.ModelForm):
         ('Marco Alba – MDB', 'Marco Alba – MDB'),
         ('Branco/nulo', 'Branco/nulo'),
         ('Outro', 'Outro'),
+        ('Não sei', 'Não sei'),
     ]
     GOV_OPTS = [
         ('Edegar Pretto – PT', 'Edegar Pretto – PT'),
@@ -16,6 +17,7 @@ class PesquisaForm(forms.ModelForm):
         ('Luciano Zucco – PL', 'Luciano Zucco – PL'),
         ('Juliana Brizola – PDT', 'Juliana Brizola – PDT'),
         ('Branco/Nulo/Outro', 'Branco/Nulo/Outro'),
+        ('Não sei', 'Não sei'),
     ]
 
     candidatos_poderia_votar = forms.MultipleChoiceField(
