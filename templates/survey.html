@@ -4,15 +4,15 @@
 {% block content %}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <style>
     :root {
-        --brand-green: #006233;   /* Verde sóbrio Thiago De Leon */
-        --brand-yellow: #FFD100;  /* Amarelo vibrante */
-        --brand-blue: #002776;    /* Azul para textos nos botões */
+        --brand-green: #006233;
+        --brand-yellow: #FFD100;
+        --brand-blue: #002776;
     }
 
-    /* Fundo Verde Sólido e Chique */
     html, body {
         height: 100%; width: 100%; overflow: hidden; margin: 0; padding: 0;
         background-color: var(--brand-green);
@@ -20,34 +20,49 @@
         color: white;
     }
 
+    /* Removemos os paddings laterais aqui para evitar que empurre pra direita */
     .slide-container {
         height: 100vh; width: 100vw; display: flex; flex-direction: column;
-        padding: 4vh 10vw; box-sizing: border-box; align-items: center;
+        box-sizing: border-box; align-items: center; position: absolute; top: 0; left: 0;
     }
 
-    /* Oculta os slides não ativos */
     .survey-slide { display: none; height: 100%; width: 100%; flex-direction: column; align-items: center; }
-
-    /* Quando ativo, vira flexbox */
     .survey-slide.active { display: flex; animation: fadeIn 0.4s ease; }
 
-    /* --- CAPA (Ajuste de Centralização) --- */
-    /* Garante que o container da capa ocupe o espaço e centralize o miolo */
+    /* --- CAPA (Centralização Absoluta) --- */
     .cover-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         display: flex; flex-direction: column; justify-content: center; align-items: center;
-        text-align: center; height: 100%; width: 100%;
+        text-align: center; width: 100%;
     }
 
     .cover-title { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
     .cover-subtitle { font-size: 1.1rem; color: var(--brand-yellow); margin-bottom: 30px; letter-spacing: 1px; }
 
+    /* --- CAIXA DE VÍDEO E BOTÃO DE PLAY --- */
     .video-box {
+        position: relative; /* Necessário para posicionar o play no meio */
         height: 35vh; aspect-ratio: 9/16; margin-bottom: 40px;
         border-radius: 15px; overflow: hidden; border: 3px solid white;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: #000;
-        cursor: pointer; /* Indica que é clicável */
+        cursor: pointer;
     }
     video { width: 100%; height: 100%; object-fit: cover; }
+
+    .play-overlay {
+        position: absolute;
+        top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.6);
+        color: white; border-radius: 50%;
+        width: 70px; height: 70px;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 30px; z-index: 10;
+        transition: 0.3s ease; padding-left: 5px; /* Compensa o ícone de play */
+    }
+    .video-box:hover .play-overlay { background: var(--brand-yellow); color: var(--brand-blue); }
 
     .btn-start-pill {
         background: var(--brand-yellow); color: var(--brand-blue);
@@ -57,21 +72,19 @@
         cursor: pointer;
     }
 
-    /* --- QUESTÕES (ALINHAMENTO PREMIUM) --- */
+    /* --- QUESTÕES --- */
     .question-wrapper {
-        width: 100%; max-width: 480px; /* Alinhamento central travado */
+        width: 100%; max-width: 480px;
         display: flex; flex-direction: column; height: 100%; justify-content: space-between;
+        padding: 4vh 20px; box-sizing: border-box; /* Padding apenas nas perguntas */
     }
 
-    .slide-title { font-size: 1.6rem; font-weight: 700; text-align: center; margin: 4vh 0; min-height: 2.5em; }
+    .slide-title { font-size: 1.6rem; font-weight: 700; text-align: center; margin: 2vh 0 4vh 0; min-height: 2.5em; }
 
     .options-list { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding-bottom: 20px;}
 
     .kiosk-opt { margin-bottom: 12px; }
-
-    /* Esconde o radio button original mas mantém acessível */
     .kiosk-opt input[type="radio"] { display: none; }
-
     .kiosk-opt label {
         background: white; color: var(--brand-blue); padding: 18px 25px; border-radius: 12px;
         display: block; font-size: 1.2rem; font-weight: 700; text-align: center;
@@ -79,7 +92,6 @@
         transition: all 0.2s ease;
     }
 
-    /* Efeito de selecionado (amarelo) */
     .kiosk-opt input[type="radio"]:checked + label {
         border-color: var(--brand-yellow);
         background: var(--brand-yellow);
@@ -90,18 +102,14 @@
         width: 100%; padding: 20px; font-size: 1.4rem; border-radius: 15px;
         border: none; text-align: center; color: var(--brand-blue); box-sizing: border-box;
     }
-
     .form-input-pill:focus { outline: 3px solid var(--brand-yellow); }
 
-    /* Navegação Alinhada */
     .nav-buttons { display: flex; gap: 15px; margin-top: auto; padding-bottom: 4vh; width: 100%; }
     .btn-nav { flex: 1; padding: 18px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; cursor: pointer;}
     .btn-white { background: white; color: var(--brand-blue); }
     .btn-yellow { background: var(--brand-yellow); color: var(--brand-blue); }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Oculta scrollbar para ficar mais limpo no totem */
     ::-webkit-scrollbar { width: 0px; background: transparent; }
 </style>
 
@@ -113,11 +121,14 @@
             <h1 class="cover-title">RAIO X<br>GRAVATAÍ</h1>
             <p class="cover-subtitle">ELEIÇÕES 2026</p>
 
-            <div class="video-box" onclick="this.querySelector('video').play()">
-                <video id="promoVideo" playsinline loop muted autoplay>
+            <div class="video-box" onclick="togglePlay(this)">
+                <video id="promoVideo" playsinline loop muted>
                     <source src="{% static 'videos/seu_video.mp4' %}" type="video/mp4">
                     Seu navegador não suporta vídeos.
                 </video>
+                <div class="play-overlay" id="playBtn">
+                    <i class="fas fa-play"></i>
+                </div>
             </div>
 
             <button type="button" class="btn-start-pill" onclick="nextSlide()">Iniciar Pesquisa</button>
@@ -132,10 +143,8 @@
             <div class="options-list">
                 {% if field.field.widget.input_type == 'text' or field.field.widget.input_type == 'number' or field.field.widget.input_type == 'email' %}
                     <input type="{{ field.field.widget.input_type|default:'text' }}"
-                           name="{{ field.name }}"
-                           id="{{ field.auto_id }}"
-                           class="form-input-pill"
-                           placeholder="Digite aqui..."
+                           name="{{ field.name }}" id="{{ field.auto_id }}"
+                           class="form-input-pill" placeholder="Digite aqui..."
                            {% if field.field.required %}required{% endif %}>
                 {% else %}
                     {% for choice in field %}
@@ -165,7 +174,21 @@
     const slides = document.querySelectorAll('.survey-slide');
     const totalSlides = slides.length;
 
-    // Função para exibir o slide atual e esconder os outros
+    // --- NOVA FUNÇÃO DE VÍDEO ---
+    function togglePlay(box) {
+        const video = box.querySelector('video');
+        const playBtn = box.querySelector('.play-overlay');
+
+        if (video.paused) {
+            video.play();
+            playBtn.style.display = 'none'; // Some com o botão de play
+        } else {
+            video.pause();
+            playBtn.style.display = 'flex'; // Mostra o botão de play
+        }
+    }
+
+    // Função para exibir o slide atual
     function showSlide(idx) {
         slides.forEach((s, i) => {
             if (i === idx) {
@@ -175,27 +198,22 @@
             }
         });
 
-        // Pausa o vídeo se sair da capa
+        // Pausa o vídeo automaticamente se sair da capa e mostra o botão de play de volta
         const video = document.getElementById('promoVideo');
-        if (idx > 0 && video) {
+        const playBtn = document.getElementById('playBtn');
+        if (idx > 0 && video && !video.paused) {
             video.pause();
-        } else if (idx === 0 && video) {
-            // video.play(); // Descomente se quiser que volte a tocar na capa
+            if(playBtn) playBtn.style.display = 'flex';
         }
     }
 
-    // Avança para o próximo slide
-    function nextSlide(btn) {
-        // Validação básica opcional antes de avançar (ex: garantir que selecionou algo)
-        // Se quiser obrigar resposta, podemos adicionar lógica aqui.
-
+    function nextSlide() {
         if (currentStep < totalSlides - 1) {
             currentStep++;
             showSlide(currentStep);
         }
     }
 
-    // Volta para o slide anterior
     function prevSlide() {
         if (currentStep > 0) {
             currentStep--;
@@ -203,31 +221,19 @@
         }
     }
 
-    // Avanço automático ao clicar na Label (para botões de rádio)
     function handleSelection(labelElement) {
-        // Pega o input (radio) associado à label
         const inputId = labelElement.getAttribute('for');
         const input = document.getElementById(inputId);
-
         if (input && input.type === 'radio') {
-            // Marca o radio como checked (o clique na label já faz isso na maioria dos browsers,
-            // mas forçar garante o funcionamento)
             input.checked = true;
-
-            // Aguarda meio segundo para o usuário ver que selecionou (efeito amarelo) e avança
-            setTimeout(() => {
-                nextSlide();
-            }, 400);
+            setTimeout(() => { nextSlide(); }, 400);
         }
     }
 
-    // Envia o formulário
     function forceSubmit() {
-        // Opcional: Adicionar desabilitação do botão para evitar duplo clique
         document.getElementById('surveyForm').submit();
     }
 
-    // Inicializa mostrando apenas o primeiro slide (garantia)
     showSlide(0);
 </script>
 {% endblock %}
