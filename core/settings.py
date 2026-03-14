@@ -77,8 +77,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Se estiver rodando via Docker, o host é 'redis'. Se for local, é 'localhost'
 import os
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:6379/0'
-# Configuração para rodar LOCAL no Windows:
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'# Configuração para rodar LOCAL no Windows:
 #CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
 #CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 # DICA: Para funcionar tanto no seu PC (sem docker full) quanto no docker da pessoa
