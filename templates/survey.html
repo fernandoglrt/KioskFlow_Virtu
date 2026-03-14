@@ -172,6 +172,27 @@
     const slides = document.querySelectorAll('.survey-slide');
     const totalSlides = slides.length;
 
+    // --- LÓGICA DE PULO (Estava faltando!) ---
+    const skipRules = { 'sexo_outro': { parent: 'sexo', expected: 'Outro' } };
+
+    function shouldSkip(idx) {
+        const slide = slides[idx];
+        if (!slide) return false;
+
+        const name = slide.getAttribute('data-name');
+        if (skipRules[name]) {
+            const rule = skipRules[name];
+            // Procura a opção selecionada na pergunta "pai" (sexo)
+            const selected = document.querySelector(`input[name="${rule.parent}"]:checked`);
+
+            // Se não tem nada selecionado OU o valor não é "Outro", deve pular!
+            if (!selected || selected.value !== rule.expected) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // --- FUNÇÃO DE PLAY COM FORÇAMENTO DE ÁUDIO ---
     function togglePlay(box) {
         const video = box.querySelector('video');
@@ -214,15 +235,23 @@
     }
 
     function nextSlide() {
-        if (currentStep < totalSlides - 1) {
-            currentStep++;
+        let n = currentStep + 1;
+        // Pula os slides que não devem aparecer
+        while (shouldSkip(n)) { n++; }
+
+        if (n < totalSlides) {
+            currentStep = n;
             showSlide(currentStep);
         }
     }
 
     function prevSlide() {
-        if (currentStep > 0) {
-            currentStep--;
+        let p = currentStep - 1;
+        // Volta pulando os slides que não deveriam ter aparecido
+        while (p > 0 && shouldSkip(p)) { p--; }
+
+        if (p >= 0) {
+            currentStep = p;
             showSlide(currentStep);
         }
     }
