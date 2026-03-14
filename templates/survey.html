@@ -25,11 +25,19 @@
         padding: 4vh 10vw; box-sizing: border-box; align-items: center;
     }
 
+    /* Oculta os slides não ativos */
     .survey-slide { display: none; height: 100%; width: 100%; flex-direction: column; align-items: center; }
+
+    /* Quando ativo, vira flexbox */
     .survey-slide.active { display: flex; animation: fadeIn 0.4s ease; }
 
-    /* --- CAPA --- */
-    .cover-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    /* --- CAPA (Ajuste de Centralização) --- */
+    /* Garante que o container da capa ocupe o espaço e centralize o miolo */
+    .cover-wrapper {
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; height: 100%; width: 100%;
+    }
+
     .cover-title { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
     .cover-subtitle { font-size: 1.1rem; color: var(--brand-yellow); margin-bottom: 30px; letter-spacing: 1px; }
 
@@ -37,6 +45,7 @@
         height: 35vh; aspect-ratio: 9/16; margin-bottom: 40px;
         border-radius: 15px; overflow: hidden; border: 3px solid white;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: #000;
+        cursor: pointer; /* Indica que é clicável */
     }
     video { width: 100%; height: 100%; object-fit: cover; }
 
@@ -45,51 +54,69 @@
         font-size: 1.1rem; font-weight: 800; padding: 18px 45px;
         border-radius: 50px; border: none; text-transform: uppercase;
         width: auto; min-width: 260px; box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        cursor: pointer;
     }
 
     /* --- QUESTÕES (ALINHAMENTO PREMIUM) --- */
     .question-wrapper {
         width: 100%; max-width: 480px; /* Alinhamento central travado */
-        display: flex; flex-direction: column; height: 100%;
+        display: flex; flex-direction: column; height: 100%; justify-content: space-between;
     }
 
     .slide-title { font-size: 1.6rem; font-weight: 700; text-align: center; margin: 4vh 0; min-height: 2.5em; }
 
-    .options-list { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+    .options-list { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding-bottom: 20px;}
 
     .kiosk-opt { margin-bottom: 12px; }
+
+    /* Esconde o radio button original mas mantém acessível */
+    .kiosk-opt input[type="radio"] { display: none; }
+
     .kiosk-opt label {
         background: white; color: var(--brand-blue); padding: 18px 25px; border-radius: 12px;
         display: block; font-size: 1.2rem; font-weight: 700; text-align: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid transparent;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid transparent; cursor: pointer;
+        transition: all 0.2s ease;
     }
-    .kiosk-opt input:checked + label { border-color: var(--brand-yellow); background: #fdfdfd; }
+
+    /* Efeito de selecionado (amarelo) */
+    .kiosk-opt input[type="radio"]:checked + label {
+        border-color: var(--brand-yellow);
+        background: var(--brand-yellow);
+        color: var(--brand-blue);
+    }
 
     .form-input-pill {
         width: 100%; padding: 20px; font-size: 1.4rem; border-radius: 15px;
-        border: none; text-align: center; color: var(--brand-blue);
+        border: none; text-align: center; color: var(--brand-blue); box-sizing: border-box;
     }
 
+    .form-input-pill:focus { outline: 3px solid var(--brand-yellow); }
+
     /* Navegação Alinhada */
-    .nav-buttons { display: flex; gap: 15px; margin-top: auto; padding-bottom: 4vh; }
-    .btn-nav { flex: 1; padding: 18px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; }
+    .nav-buttons { display: flex; gap: 15px; margin-top: auto; padding-bottom: 4vh; width: 100%; }
+    .btn-nav { flex: 1; padding: 18px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; cursor: pointer;}
     .btn-white { background: white; color: var(--brand-blue); }
     .btn-yellow { background: var(--brand-yellow); color: var(--brand-blue); }
 
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Oculta scrollbar para ficar mais limpo no totem */
+    ::-webkit-scrollbar { width: 0px; background: transparent; }
 </style>
 
 <form method="post" id="surveyForm" class="slide-container" novalidate>
     {% csrf_token %}
 
-    <div class="survey-slide active" data-step="0">
-        <div class="cover-content">
+    <div class="survey-slide active" id="slide-0" data-step="0">
+        <div class="cover-wrapper">
             <h1 class="cover-title">RAIO X<br>GRAVATAÍ</h1>
             <p class="cover-subtitle">ELEIÇÕES 2026</p>
 
             <div class="video-box" onclick="this.querySelector('video').play()">
-                <video id="promoVideo" playsinline>
+                <video id="promoVideo" playsinline loop muted autoplay>
                     <source src="{% static 'videos/seu_video.mp4' %}" type="video/mp4">
+                    Seu navegador não suporta vídeos.
                 </video>
             </div>
 
@@ -98,22 +125,24 @@
     </div>
 
     {% for field in form %}
-    <div class="survey-slide" data-step="{{ forloop.counter }}" data-name="{{ field.name }}">
+    <div class="survey-slide" id="slide-{{ forloop.counter }}" data-step="{{ forloop.counter }}" data-name="{{ field.name }}">
         <div class="question-wrapper">
             <h2 class="slide-title">{{ field.label }}</h2>
 
             <div class="options-list">
-                {% if field.field.widget.input_type == 'text' %}
-                    {{ field }}
-                    <script>document.getElementById("{{ field.auto_id }}").className = "form-input-pill";</script>
+                {% if field.field.widget.input_type == 'text' or field.field.widget.input_type == 'number' or field.field.widget.input_type == 'email' %}
+                    <input type="{{ field.field.widget.input_type|default:'text' }}"
+                           name="{{ field.name }}"
+                           id="{{ field.auto_id }}"
+                           class="form-input-pill"
+                           placeholder="Digite aqui..."
+                           {% if field.field.required %}required{% endif %}>
                 {% else %}
                     {% for choice in field %}
-                        {% if choice.data.value and choice.data.value != "" %}
                         <div class="kiosk-opt">
                             {{ choice.tag }}
                             <label for="{{ choice.id_for_label }}" onclick="handleSelection(this)">{{ choice.choice_label }}</label>
                         </div>
-                        {% endif %}
                     {% endfor %}
                 {% endif %}
             </div>
@@ -121,7 +150,7 @@
             <div class="nav-buttons">
                 <button type="button" class="btn-nav btn-white" onclick="prevSlide()">Voltar</button>
                 {% if not forloop.last %}
-                    <button type="button" class="btn-nav btn-yellow" onclick="nextSlide()">Próximo</button>
+                    <button type="button" class="btn-nav btn-yellow" onclick="nextSlide(this)">Próximo</button>
                 {% else %}
                     <button type="button" class="btn-nav btn-yellow" onclick="forceSubmit()">Finalizar</button>
                 {% endif %}
@@ -134,49 +163,71 @@
 <script>
     let currentStep = 0;
     const slides = document.querySelectorAll('.survey-slide');
+    const totalSlides = slides.length;
 
-    // LÓGICA DE PULO: Pula 'sexo_outro' se não for 'Outro'
-    const skipRules = { 'sexo_outro': { parent: 'sexo', expected: 'Outro' } };
-
-    function shouldSkip(idx) {
-        const slide = slides[idx];
-        if (!slide) return false;
-        const name = slide.getAttribute('data-name');
-        if (skipRules[name]) {
-            const rule = skipRules[name];
-            const selected = document.querySelector(`input[name="${rule.parent}"]:checked`);
-            if (!selected || selected.value !== rule.expected) return true;
-        }
-        return false;
-    }
-
+    // Função para exibir o slide atual e esconder os outros
     function showSlide(idx) {
-        slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-        // COMO FAZER O VÍDEO PAUSAR
+        slides.forEach((s, i) => {
+            if (i === idx) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+
+        // Pausa o vídeo se sair da capa
         const video = document.getElementById('promoVideo');
-        if (idx > 0 && video) video.pause();
+        if (idx > 0 && video) {
+            video.pause();
+        } else if (idx === 0 && video) {
+            // video.play(); // Descomente se quiser que volte a tocar na capa
+        }
     }
 
-    function nextSlide() {
-        let n = currentStep + 1;
-        while (shouldSkip(n)) { n++; }
-        if (n < slides.length) { currentStep = n; showSlide(currentStep); }
+    // Avança para o próximo slide
+    function nextSlide(btn) {
+        // Validação básica opcional antes de avançar (ex: garantir que selecionou algo)
+        // Se quiser obrigar resposta, podemos adicionar lógica aqui.
+
+        if (currentStep < totalSlides - 1) {
+            currentStep++;
+            showSlide(currentStep);
+        }
     }
 
+    // Volta para o slide anterior
     function prevSlide() {
-        let p = currentStep - 1;
-        while (p > 0 && shouldSkip(p)) { p--; }
-        if (p >= 0) { currentStep = p; showSlide(currentStep); }
+        if (currentStep > 0) {
+            currentStep--;
+            showSlide(currentStep);
+        }
     }
 
-    function handleSelection(label) {
-        const input = document.getElementById(label.getAttribute('for'));
-        if (input.type === 'radio') setTimeout(nextSlide, 350);
+    // Avanço automático ao clicar na Label (para botões de rádio)
+    function handleSelection(labelElement) {
+        // Pega o input (radio) associado à label
+        const inputId = labelElement.getAttribute('for');
+        const input = document.getElementById(inputId);
+
+        if (input && input.type === 'radio') {
+            // Marca o radio como checked (o clique na label já faz isso na maioria dos browsers,
+            // mas forçar garante o funcionamento)
+            input.checked = true;
+
+            // Aguarda meio segundo para o usuário ver que selecionou (efeito amarelo) e avança
+            setTimeout(() => {
+                nextSlide();
+            }, 400);
+        }
     }
 
+    // Envia o formulário
     function forceSubmit() {
-        // Envio forçado via JS para evitar travas de validação invisível
+        // Opcional: Adicionar desabilitação do botão para evitar duplo clique
         document.getElementById('surveyForm').submit();
     }
+
+    // Inicializa mostrando apenas o primeiro slide (garantia)
+    showSlide(0);
 </script>
 {% endblock %}
