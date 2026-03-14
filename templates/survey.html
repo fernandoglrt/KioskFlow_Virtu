@@ -1,170 +1,131 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+
 <style>
-    body { overflow-x: hidden; }
-    /* Botão "Não Informar" (Estilo Ghost) */
-    .btn-skip {
-        display: block;
-        width: 100%;
-        margin-top: 15px;
-        background: transparent;
-        border: 2px solid rgba(255, 255, 255, 0.5);
+    :root {
+        --brand-green: #006233;   /* Verde sóbrio Thiago De Leon */
+        --brand-yellow: #FFD100;  /* Amarelo vibrante */
+        --brand-blue: #002776;    /* Azul para textos nos botões */
+    }
+
+    /* Fundo Verde Sólido e Chique */
+    html, body {
+        height: 100%; width: 100%; overflow: hidden; margin: 0; padding: 0;
+        background-color: var(--brand-green);
+        font-family: 'Montserrat', sans-serif;
         color: white;
-        padding: 15px;
-        border-radius: 50px;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 1rem;
-        transition: all 0.3s ease;
     }
 
-    .btn-skip:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: white;
-    }
     .slide-container {
-        max-width: 700px;
-        margin: 0 auto;
-        min-height: 80vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+        height: 100vh; width: 100vw; display: flex; flex-direction: column;
+        padding: 4vh 10vw; box-sizing: border-box; align-items: center;
     }
 
-    .survey-slide { display: none; }
+    .survey-slide { display: none; height: 100%; width: 100%; flex-direction: column; align-items: center; }
+    .survey-slide.active { display: flex; animation: fadeIn 0.4s ease; }
 
-    .survey-slide.active {
-        display: block;
-        animation: fadeInRight 0.5s ease;
+    /* --- CAPA --- */
+    .cover-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .cover-title { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+    .cover-subtitle { font-size: 1.1rem; color: var(--brand-yellow); margin-bottom: 30px; letter-spacing: 1px; }
+
+    .video-box {
+        height: 35vh; aspect-ratio: 9/16; margin-bottom: 40px;
+        border-radius: 15px; overflow: hidden; border: 3px solid white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: #000;
+    }
+    video { width: 100%; height: 100%; object-fit: cover; }
+
+    .btn-start-pill {
+        background: var(--brand-yellow); color: var(--brand-blue);
+        font-size: 1.1rem; font-weight: 800; padding: 18px 45px;
+        border-radius: 50px; border: none; text-transform: uppercase;
+        width: auto; min-width: 260px; box-shadow: 0 8px 15px rgba(0,0,0,0.2);
     }
 
-    .survey-slide.exiting {
-        animation: fadeOutLeft 0.5s ease forwards;
+    /* --- QUESTÕES (ALINHAMENTO PREMIUM) --- */
+    .question-wrapper {
+        width: 100%; max-width: 480px; /* Alinhamento central travado */
+        display: flex; flex-direction: column; height: 100%;
     }
 
-    /* Barra de Progresso */
-    .progress-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 12px;
-        background: rgba(255,255,255,0.2);
-        z-index: 1000;
+    .slide-title { font-size: 1.6rem; font-weight: 700; text-align: center; margin: 4vh 0; min-height: 2.5em; }
+
+    .options-list { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+
+    .kiosk-opt { margin-bottom: 12px; }
+    .kiosk-opt label {
+        background: white; color: var(--brand-blue); padding: 18px 25px; border-radius: 12px;
+        display: block; font-size: 1.2rem; font-weight: 700; text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid transparent;
+    }
+    .kiosk-opt input:checked + label { border-color: var(--brand-yellow); background: #fdfdfd; }
+
+    .form-input-pill {
+        width: 100%; padding: 20px; font-size: 1.4rem; border-radius: 15px;
+        border: none; text-align: center; color: var(--brand-blue);
     }
 
-    .progress-bar-fill {
-        height: 100%;
-        background: #ffdf00;
-        width: 0%;
-        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 0 15px rgba(255, 223, 0, 0.8);
-    }
+    /* Navegação Alinhada */
+    .nav-buttons { display: flex; gap: 15px; margin-top: auto; padding-bottom: 4vh; }
+    .btn-nav { flex: 1; padding: 18px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; }
+    .btn-white { background: white; color: var(--brand-blue); }
+    .btn-yellow { background: var(--brand-yellow); color: var(--brand-blue); }
 
-    /* Capa e Botões */
-    .cover-content { text-align: center; color: white; }
-    .cover-title { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; line-height: 1.1; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    .cover-subtitle { font-size: 1.5rem; font-weight: 300; opacity: 0.9; margin-bottom: 50px; }
-
-    .btn-start {
-        background: #ffdf00; color: #002776; font-size: 2.2rem; font-weight: 800; padding: 20px 80px;
-        border-radius: 60px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        transition: transform 0.2s; text-transform: uppercase; letter-spacing: 2px;
-    }
-    .btn-start:active { transform: scale(0.95); }
-
-    .slide-title { color: white; font-size: 2rem; font-weight: 700; margin-bottom: 30px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-
-    .nav-buttons { margin-top: 30px; display: flex; gap: 15px; justify-content: space-between; }
-
-    .btn-nav {
-        background: white; color: #009c3b; border: none; padding: 15px 30px; border-radius: 50px;
-        font-weight: bold; font-size: 1.2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.2); min-width: 140px;
-    }
-    .btn-nav.primary { background: #ffdf00; color: #002776; }
-
-    .kiosk-opt label { background: rgba(255, 255, 255, 0.95); border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .form-control-lg-kiosk { width: 100%; padding: 20px; font-size: 1.3rem; border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-
-    .animate-pulse { animation: pulseBtn 2s infinite; }
-    @keyframes pulseBtn { 0% { box-shadow: 0 0 0 0 rgba(255, 223, 0, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(255, 223, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 223, 0, 0); } }
-
-    .shake { animation: shake 0.5s; }
-    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 
-<div class="progress-container">
-    <div class="progress-bar-fill" id="progressBar"></div>
-</div>
-
-<form method="post" id="surveyForm" class="slide-container">
+<form method="post" id="surveyForm" class="slide-container" novalidate>
     {% csrf_token %}
 
-    <div class="survey-slide active text-center" data-step="0" data-type="cover" data-name="capa">
-        <div class="cover-content animate__animated animate__fadeInDown">
-            <div class="cover-title">Raio X<br>Gravataí</div>
-            <div class="cover-subtitle">Eleições 2026</div>
-            <button type="button" class="btn-start animate-pulse" onclick="nextSlide()">
-                Iniciar! <i class="fas fa-play ms-2" style="font-size: 1.5rem;"></i>
-            </button>
+    <div class="survey-slide active" data-step="0">
+        <div class="cover-content">
+            <h1 class="cover-title">RAIO X<br>GRAVATAÍ</h1>
+            <p class="cover-subtitle">ELEIÇÕES 2026</p>
+
+            <div class="video-box" onclick="this.querySelector('video').play()">
+                <video id="promoVideo" playsinline>
+                    <source src="{% static 'videos/seu_video.mp4' %}" type="video/mp4">
+                </video>
+            </div>
+
+            <button type="button" class="btn-start-pill" onclick="nextSlide()">Iniciar Pesquisa</button>
         </div>
     </div>
 
     {% for field in form %}
-    <div class="survey-slide" data-step="{{ forloop.counter }}" data-type="{{ field.field.widget.input_type }}" data-name="{{ field.name }}">
+    <div class="survey-slide" data-step="{{ forloop.counter }}" data-name="{{ field.name }}">
+        <div class="question-wrapper">
+            <h2 class="slide-title">{{ field.label }}</h2>
 
-        <div class="slide-title">
-            <span class="badge bg-warning text-dark mb-2 fs-6">
-               Questão
-            </span><br>
-            {{ field.label }}
-        </div>
-
-        <div class="field-content">
-            {% if field.field.widget.input_type == 'text' %}
-                {{ field }}
-                <script>document.getElementById("{{ field.auto_id }}").className += " form-control-lg-kiosk";</script>
-
-                {% if field.name == 'whatsapp' %}
-                <button type="button" class="btn-skip" onclick="skipFinalSlide()">
-                    Prefiro não informar <i class="fas fa-forward ms-2"></i>
-                </button>
+            <div class="options-list">
+                {% if field.field.widget.input_type == 'text' %}
+                    {{ field }}
+                    <script>document.getElementById("{{ field.auto_id }}").className = "form-input-pill";</script>
+                {% else %}
+                    {% for choice in field %}
+                        {% if choice.data.value and choice.data.value != "" %}
+                        <div class="kiosk-opt">
+                            {{ choice.tag }}
+                            <label for="{{ choice.id_for_label }}" onclick="handleSelection(this)">{{ choice.choice_label }}</label>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
                 {% endif %}
+            </div>
 
-            {% else %}
-                <div class="row g-3">
-                {% for choice in field %}
-                    {% if choice.data.value %}
-                    <div class="col-12 kiosk-opt animate__animated animate__fadeInUp" style="animation-delay: {{ forloop.counter0 }}00ms">
-                        {{ choice.tag }}
-                        <label for="{{ choice.id_for_label }}" onclick="handleSelection(this, '{{ field.field.widget.input_type }}')">
-                            {{ choice.choice_label }}
-                            {% if field.field.widget.input_type == 'checkbox' %}
-                            <i class="fas fa-check float-end opacity-25 check-icon"></i>
-                            {% endif %}
-                        </label>
-                    </div>
-                    {% endif %}
-                {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="nav-buttons">
-            <button type="button" class="btn-nav" onclick="prevSlide()">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </button>
-
-            {% if not forloop.last %}
-                <button type="button" class="btn-nav primary btn-next" onclick="nextSlide()">
-                    Continuar <i class="fas fa-arrow-right"></i>
-                </button>
-            {% else %}
-                <button type="submit" class="btn-nav primary bg-success text-white">
-                    FINALIZAR <i class="fas fa-check-double"></i>
-                </button>
-            {% endif %}
+            <div class="nav-buttons">
+                <button type="button" class="btn-nav btn-white" onclick="prevSlide()">Voltar</button>
+                {% if not forloop.last %}
+                    <button type="button" class="btn-nav btn-yellow" onclick="nextSlide()">Próximo</button>
+                {% else %}
+                    <button type="button" class="btn-nav btn-yellow" onclick="forceSubmit()">Finalizar</button>
+                {% endif %}
+            </div>
         </div>
     </div>
     {% endfor %}
@@ -173,173 +134,48 @@
 <script>
     let currentStep = 0;
     const slides = document.querySelectorAll('.survey-slide');
-    const progressBar = document.getElementById('progressBar');
-    const totalQuestions = slides.length - 1;
 
-    // --- MAPA DE REGRAS LÓGICAS ---
-    // Sintaxe: 'nome_do_campo_que_pode_sumir': { dependsOn: 'nome_do_campo_pai', value: 'valor_necessario' }
-    const logicRules = {
-        'sexo_outro': { dependsOn: 'sexo', expectedValue: 'Outro' },
-        // Se no futuro criar 'candidato_outro', basta adicionar aqui:
-        // 'candidato_outro': { dependsOn: 'candidato_voto', expectedValue: 'Outro' }
-    };
+    // LÓGICA DE PULO: Pula 'sexo_outro' se não for 'Outro'
+    const skipRules = { 'sexo_outro': { parent: 'sexo', expected: 'Outro' } };
 
-    showSlide(currentStep);
-
-    function showSlide(index) {
-        // Barra de progresso visual
-        let progress = 0;
-        if (index > 0) progress = (index / totalQuestions) * 100;
-        progressBar.style.width = `${progress}%`;
-
-        slides.forEach((slide, i) => {
-            slide.classList.remove('active', 'exiting');
-            if (i === index) {
-                slide.classList.add('active');
-                const input = slide.querySelector('input[type="text"]');
-                if(input) setTimeout(() => input.focus(), 500);
-            }
-        });
+    function shouldSkip(idx) {
+        const slide = slides[idx];
+        if (!slide) return false;
+        const name = slide.getAttribute('data-name');
+        if (skipRules[name]) {
+            const rule = skipRules[name];
+            const selected = document.querySelector(`input[name="${rule.parent}"]:checked`);
+            if (!selected || selected.value !== rule.expected) return true;
+        }
+        return false;
     }
 
-    // Função que verifica se deve pular o slide
-    function shouldSkipSlide(index) {
-        if (index >= slides.length || index < 0) return false;
-
-        const slide = slides[index];
-        const fieldName = slide.getAttribute('data-name');
-
-        // Verifica se existe regra para este slide
-        if (logicRules[fieldName]) {
-            const rule = logicRules[fieldName];
-
-            // Busca o valor do campo pai (ex: 'sexo')
-            // Procura o input checked com o name igual ao pai
-            const parentInput = document.querySelector(`input[name="${rule.dependsOn}"]:checked`);
-
-            // Se o pai não tem nada marcado OU o valor marcado é diferente do esperado, deve pular
-            if (!parentInput || parentInput.value !== rule.expectedValue) {
-                // Limpa o valor do campo atual para não ir lixo pro banco
-                const currentInputs = slide.querySelectorAll('input');
-                currentInputs.forEach(inp => inp.value = '');
-                return true; // SIM, PULE ESTE SLIDE
-            }
-        }
-        return false; // NÃO PULE
+    function showSlide(idx) {
+        slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+        // COMO FAZER O VÍDEO PAUSAR
+        const video = document.getElementById('promoVideo');
+        if (idx > 0 && video) video.pause();
     }
 
     function nextSlide() {
-        if (currentStep === 0) {
-            goToStep(currentStep + 1);
-            return;
-        }
-
-        if (validateSlide(currentStep)) {
-            // Calcula o próximo passo
-            let nextStepIndex = currentStep + 1;
-
-            // Loop para pular múltiplos slides se necessário
-            while (shouldSkipSlide(nextStepIndex)) {
-                nextStepIndex++;
-            }
-
-            goToStep(nextStepIndex);
-        } else {
-            shakeSlide();
-        }
+        let n = currentStep + 1;
+        while (shouldSkip(n)) { n++; }
+        if (n < slides.length) { currentStep = n; showSlide(currentStep); }
     }
 
     function prevSlide() {
-        if (currentStep > 0) {
-            let prevStepIndex = currentStep - 1;
-
-            // Loop para pular slides na volta também (senão trava no oculto)
-            while (prevStepIndex > 0 && shouldSkipSlide(prevStepIndex)) {
-                prevStepIndex--;
-            }
-
-            goToStep(prevStepIndex, true); // true = backwards
-        }
+        let p = currentStep - 1;
+        while (p > 0 && shouldSkip(p)) { p--; }
+        if (p >= 0) { currentStep = p; showSlide(currentStep); }
     }
 
-    function goToStep(index, backwards = false) {
-        // Animação de saída
-        if (!backwards) slides[currentStep].classList.add('exiting');
-
-        setTimeout(() => {
-            currentStep = index;
-            if (currentStep < slides.length) {
-                showSlide(currentStep);
-            }
-        }, backwards ? 0 : 400); // Se for voltar, é instantâneo pra melhor UX
+    function handleSelection(label) {
+        const input = document.getElementById(label.getAttribute('for'));
+        if (input.type === 'radio') setTimeout(nextSlide, 350);
     }
 
-    function shakeSlide() {
-        const content = slides[currentStep].querySelector('.field-content');
-        content.classList.add('shake');
-        setTimeout(() => content.classList.remove('shake'), 500);
-    }
-
-    function validateSlide(index) {
-        const slide = slides[index];
-        const inputs = slide.querySelectorAll('input');
-
-        let isValid = false;
-        let hasInputs = false;
-
-        inputs.forEach(input => {
-            hasInputs = true;
-            if (input.type === 'radio' || input.type === 'checkbox') {
-                if (input.checked) isValid = true;
-            } else if (input.type === 'text') {
-                // Campos de texto condicional (como sexo_outro) não podem ser validados aqui se forem opcionais
-                // Mas no nosso modelo eles são opcionais no BD.
-                // Se você quiser obrigar preenchimento, descomente a linha abaixo:
-                // if (input.value.trim() !== '') isValid = true;
-                isValid = true; // Deixando texto opcional por padrão para não travar
-            }
-        });
-
-        if (!hasInputs) return true;
-        return isValid;
-    }
-
-    function handleSelection(label, type) {
-        const inputId = label.getAttribute('for');
-        const input = document.getElementById(inputId);
-
-        if (input.type === 'radio') {
-            setTimeout(() => {
-                nextSlide();
-            }, 300);
-        }
-    }
-
-    // Tecla Enter
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const isSubmit = slides[currentStep].querySelector('button[type="submit"]');
-
-            if (currentStep > 0) {
-                if(isSubmit) {
-                    if (validateSlide(currentStep)) document.getElementById('surveyForm').submit();
-                } else {
-                    nextSlide();
-                }
-            } else {
-                nextSlide();
-            }
-        }
-    });
-    // Função para pular o WhatsApp e enviar
-    function skipFinalSlide() {
-        // Encontra o input de whatsapp
-        const whatsappInput = document.querySelector('input[name="whatsapp"]');
-        if (whatsappInput) {
-            whatsappInput.value = ""; // Garante que está vazio
-        }
-        // Envia o formulário
+    function forceSubmit() {
+        // Envio forçado via JS para evitar travas de validação invisível
         document.getElementById('surveyForm').submit();
     }
 </script>

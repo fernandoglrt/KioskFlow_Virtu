@@ -26,5 +26,7 @@ services:
   # 3. O Banco de Memória (Redis)
   redis:
     image: redis:7-alpine
+    environment:
+      - REDIS_HOST=redis
     ports:
       - "6379:6379"
