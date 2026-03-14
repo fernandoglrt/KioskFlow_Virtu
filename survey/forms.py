@@ -11,6 +11,19 @@ class PesquisaForm(forms.ModelForm):
         ('Outro', 'Outro'),
         ('Não sei', 'Não sei'),
     ]
+    REGIOES_OPTS = [
+        ('Central', 'CENTRAL (Centro, Dom Feliciano, Flamboyant, Timbaúva, Salgado Filho, São Vicente)'),
+        ('Moradas', 'DAS MORADAS (Águas Claras, Morada I, II e III, Pq. Ipiranga)'),
+        ('Bonsucesso',
+         'BONSUCESSO (Barnabé, Bonsucesso, Garibaldina, Pq. Eucaliptos, Planaltina, São Geraldo, Vl. Branca)'),
+        ('Morungava', 'MORUNGAVA (Cadiz, Itacolomi, Morungava, Santa Tecla)'),
+        ('Rincao', 'DO RINCÃO (Auxiliadora, Nova Conquista, Rincão)'),
+        ('Parque Florido', 'PARQUE FLORIDO (Pq. Florido, Pq. Olinda, São Vicente)'),
+        ('Cohabs', 'DAS COHABS (Cohab A e C, Monte Belo, São Jerônimo)'),
+        ('Parque',
+         'DO PARQUE (Caça e Pesca, Itatiaia, Mato Alto, Morada Gaúcha, Pq. Anjos, Passo dos Ferreiros, Sítio Gaúcho)'),
+        ('Breno Garcia', 'DO BRENO GARCIA (Jd. Cedro, Padre Réus, Passo da Caveira, Sagrada Família, Vila Neiva)'),
+    ]
     GOV_OPTS = [
         ('Edegar Pretto – PT', 'Edegar Pretto – PT'),
         ('Gabriel Souza – MDB', 'Gabriel Souza – MDB'),
@@ -42,7 +55,11 @@ class PesquisaForm(forms.ModelForm):
         choices=GOV_OPTS,
         widget=forms.RadioSelect
     )
-
+    regiao_residencia = forms.ChoiceField(
+        label='Qual das regiões você atualmente reside? De forma aproximada:',
+        choices=REGIOES_OPTS,
+        widget=forms.RadioSelect
+    )
     class Meta:
         model = PesquisaGravatai
         fields = '__all__'

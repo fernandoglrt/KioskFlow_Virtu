@@ -20,7 +20,7 @@ class PesquisaGravatai(models.Model):
     faixa_etaria = models.CharField(max_length=20, choices=FAIXA_ETARIA)
     escolaridade = models.CharField(max_length=50, choices=ESCOLARIDADE)
     ocupacao = models.CharField(max_length=50, choices=OCUPACAO)
-
+    regiao_residencia = models.CharField(max_length=150)
     # Perguntas Eleitorais
     candidatos_poderia_votar = models.TextField(verbose_name="Poderia Votar")
     candidato_voto_hoje = models.CharField(max_length=100, verbose_name="Voto Hoje")
