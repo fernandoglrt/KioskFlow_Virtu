@@ -26,7 +26,9 @@ class PesquisaGravatai(models.Model):
     candidato_voto_hoje = models.CharField(max_length=100, verbose_name="Voto Hoje")
     candidatos_rejeicao = models.TextField(verbose_name="Rejeição")
     candidato_governador = models.CharField(max_length=100)
-
+    voto_presidente = models.CharField(max_length=150, null=True, blank=True)
+    rumo_governo_estado = models.CharField(max_length=150, null=True, blank=True)
+    avaliacao_zaffallon = models.CharField(max_length=50, null=True, blank=True)
     renda_familiar = models.CharField(max_length=50, choices=RENDA)
     nome = models.CharField(max_length=150)
     whatsapp = models.CharField(max_length=20, blank=True, null=True)

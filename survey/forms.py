@@ -60,6 +60,51 @@ class PesquisaForm(forms.ModelForm):
         choices=REGIOES_OPTS,
         widget=forms.RadioSelect
     )
+    PRESIDENTE_OPTS = [
+        ('Flávio Bolsonaro - PL', 'Flávio Bolsonaro - PL'),
+        ('Luis Inácio Lula da Silva - PT', 'Luis Inácio Lula da Silva - PT'),
+        ('Romeu Zema - NOVO', 'Romeu Zema - NOVO'),
+        ('Ronaldo Caiado', 'Ronaldo Caiado'),
+        ('Branco/Nulo', 'Branco/Nulo'),
+        ('Não sei', 'Não sei'),
+    ]
+
+    RUMO_ESTADO_OPTS = [
+        ('Deve continuar como está', 'Deve continuar como está'),
+        ('Mudar apenas o que está ruim', 'Mudar apenas o que está ruim'),
+        ('Mudar totalmente', 'Mudar totalmente'),
+        ('Não sei', 'Não sei'),
+    ]
+
+    AVALIACAO_ZAFFALLON_OPTS = [
+        ('Ótima', 'Ótima'),
+        ('Boa', 'Boa'),
+        ('Regular', 'Regular'),
+        ('Ruim', 'Ruim'),
+        ('Péssima', 'Péssima'),
+        ('Não sei', 'Não sei'),
+    ]
+
+    # --- CAMPOS MAPEADOS ---
+    voto_presidente = forms.ChoiceField(
+        label='Se as eleições fossem hoje, e os candidatos a presidência fossem estes, você votaria em:',
+        choices=PRESIDENTE_OPTS,
+        widget=forms.RadioSelect
+    )
+
+    rumo_governo_estado = forms.ChoiceField(
+        label='Na sua opinião, em relação ao rumo do Governo do Estado, você acredita que:',
+        choices=RUMO_ESTADO_OPTS,
+        widget=forms.RadioSelect
+    )
+
+    avaliacao_zaffallon = forms.ChoiceField(
+        label='De maneira geral, como você avalia a gestão do Governo Zaffallon?',
+        choices=AVALIACAO_ZAFFALLON_OPTS,
+        widget=forms.RadioSelect
+    )
+
+
     class Meta:
         model = PesquisaGravatai
         fields = '__all__'
