@@ -1,4 +1,4 @@
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, TemplateView, View, ListView
 from django.urls import reverse_lazy
 from .models import PesquisaGravatai
 from .forms import PesquisaForm
@@ -26,3 +26,15 @@ class SurveyView(CreateView):
 
 class SuccessView(TemplateView):
     template_name = 'success.html'
+
+class DashboardView(ListView):
+    model = PesquisaGravatai
+    template_name = 'dashboard.html'
+    context_object_name = 'pesquisas'
+    ordering = ['-id'] # Traz os mais recentes primeiro
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Passamos também o total de respostas para criar um card de métrica
+        context['total_respostas'] = PesquisaGravatai.objects.count()
+        return context

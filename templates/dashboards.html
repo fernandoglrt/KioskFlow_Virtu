@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<!-- Bootstrap 5 CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    :root {
+        --brand-green: #006233;
+        --brand-yellow: #FFD100;
+        --brand-blue: #002776;
+        --bg-light: #F4F7F6;
+    }
+
+    body {
+        background-color: var(--bg-light);
+        font-family: 'Montserrat', sans-serif;
+        color: var(--brand-blue);
+    }
+
+    /* Topbar Premium */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--brand-green), #004d28);
+        color: white; padding: 40px 0 80px 0;
+        border-radius: 0 0 40px 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: -50px;
+    }
+
+    .dashboard-title { font-weight: 800; font-size: 2.2rem; letter-spacing: -1px; }
+
+    /* Cards de Métrica */
+    .metric-card {
+        background: white; border-radius: 20px;
+        padding: 30px; border: none;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        display: flex; align-items: center; justify-content: space-between;
+        transition: transform 0.3s ease;
+    }
+    .metric-card:hover { transform: translateY(-5px); }
+    .metric-icon {
+        width: 70px; height: 70px; border-radius: 20px;
+        background: rgba(255, 209, 0, 0.2); color: #e6bc00;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2rem;
+    }
+    .metric-value { font-size: 3rem; font-weight: 800; line-height: 1; margin: 0; color: var(--brand-green); }
+    .metric-label { font-size: 1rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;}
+
+    /* Tabela App-Like */
+    .table-container {
+        background: white; border-radius: 20px;
+        padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        margin-top: 30px; overflow-x: auto;
+    }
+
+    .table { margin-bottom: 0; vertical-align: middle; }
+    .table thead th {
+        border-bottom: 2px solid #edf2f9; color: #95aac9;
+        font-weight: 600; text-transform: uppercase; font-size: 0.85rem;
+        letter-spacing: 1px; padding-bottom: 15px;
+    }
+    .table tbody tr { transition: all 0.2s ease; border-bottom: 1px solid #edf2f9; }
+    .table tbody tr:hover { background-color: #f9fbfd; transform: scale(1.005); }
+    .table tbody td { padding: 20px 10px; color: #405166; font-weight: 500; font-size: 0.95rem; }
+    
+    .badge-custom {
+        padding: 8px 15px; border-radius: 30px; font-weight: 600; font-size: 0.8rem;
+        background: rgba(0, 98, 51, 0.1); color: var(--brand-green);
+    }
+</style>
+
+<div class="dashboard-header animate__animated animate__fadeInDown">
+    <div class="container">
+        <h1 class="dashboard-title"><i class="fas fa-chart-pie me-3" style="color: var(--brand-yellow);"></i>Painel de Resultados</h1>
+        <p class="opacity-75 mb-0">Monitoramento em tempo real das eleições 2026</p>
+    </div>
+</div>
+
+<div class="container animate__animated animate__fadeInUp animate__delay-1s">
+    <!-- Métrica -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div>
+                    <p class="metric-label">Total Entrevistados</p>
+                    <h2 class="metric-value">{{ total_respostas }}</h2>
+                </div>
+                <div class="metric-icon"><i class="fas fa-users"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-container">
+        <table class="table table-borderless">
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Nome / WhatsApp</th>
+                    <th>Região</th>
+                    <th>Presidência</th>
+                    <th>Gov. Estado</th>
+                    <th>Zaffallon</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pesquisas %}
+                <tr>
+                    <td><span class="text-muted fw-bold">#{{ p.id }}</span></td>
+                    <td>
+                        <div class="fw-bold text-dark">{{ p.nome }}</div>
+                        <div class="text-muted small"><i class="fab fa-whatsapp me-1 text-success"></i>{{ p.whatsapp|default:"--" }}</div>
+                    </td>
+                    <td><span class="badge-custom"><i class="fas fa-map-marker-alt me-1"></i>{{ p.regiao_residencia|truncatechars:15 }}</span></td>
+                    <td class="fw-bold">{{ p.voto_presidente|default:"--" }}</td>
+                    <td>{{ p.rumo_governo_estado|default:"--" }}</td>
+                    <td>
+                        <!-- Indicador visual simples de cor -->
+                        {% if p.avaliacao_zaffallon == 'Ótima' or p.avaliacao_zaffallon == 'Boa' %}
+                            <span class="text-success fw-bold"><i class="fas fa-arrow-up me-1"></i>{{ p.avaliacao_zaffallon }}</span>
+                        {% elif p.avaliacao_zaffallon == 'Péssima' or p.avaliacao_zaffallon == 'Ruim' %}
+                            <span class="text-danger fw-bold"><i class="fas fa-arrow-down me-1"></i>{{ p.avaliacao_zaffallon }}</span>
+                        {% else %}
+                            <span class="text-warning fw-bold"><i class="fas fa-minus me-1"></i>{{ p.avaliacao_zaffallon|default:"--" }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">Nenhuma pesquisa registrada ainda.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
