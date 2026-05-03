@@ -1,51 +1,80 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
-    <div class="kiosk-card text-center p-5 animate__animated animate__zoomIn">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+<!-- Animate.css para animações premium -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
-        <div class="mb-4 animate__animated animate__rotateIn animate__delay-1s">
-            <i class="fas fa-check-circle text-success" style="font-size: 6rem;"></i>
-        </div>
+<style>
+    :root {
+        --brand-green: #006233;
+        --brand-yellow: #FFD100;
+    }
 
-        <h1 class="fw-bold text-primary mb-3">Obrigado!</h1>
-        <h3 class="lead fs-4 text-dark">Resposta computada com sucesso.</h3>
+    html, body {
+        height: 100%; width: 100%; overflow: hidden; margin: 0; padding: 0;
+        background-color: var(--brand-green);
+        font-family: 'Montserrat', sans-serif;
+        color: white;
+    }
 
-        <p class="text-muted mt-4 small">
-            Reiniciando em <span id="countdown">3</span>s...
-        </p>
+    .success-container {
+        height: 100vh; width: 100vw; display: flex; flex-direction: column;
+        justify-content: center; align-items: center; text-align: center;
+        padding: 20px; box-sizing: border-box;
+    }
 
-        <div class="progress mt-3" style="height: 5px;">
-            <div class="progress-bar bg-success" id="redirectBar" role="progressbar" style="width: 100%"></div>
-        </div>
+    /* Checkmark animado nativo */
+    .success-icon-wrapper {
+        width: 120px; height: 120px; border-radius: 50%;
+        background: white; display: flex; justify-content: center; align-items: center;
+        margin-bottom: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
 
+    .success-icon-wrapper svg {
+        width: 60px; height: 60px; color: var(--brand-green);
+    }
+
+    .success-title { font-size: 3rem; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; }
+    .success-subtitle { font-size: 1.5rem; color: var(--brand-yellow); margin-bottom: 40px; }
+
+    /* Barra de progresso para o auto-restart */
+    .progress-bar-bg {
+        width: 100%; max-width: 400px; height: 8px; background: rgba(255,255,255,0.2);
+        border-radius: 10px; overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%; background: var(--brand-yellow); width: 0%;
+        animation: loadProgress 7s linear forwards; /* 7 segundos de tela */
+    }
+
+    @keyframes loadProgress { 0% { width: 0%; } 100% { width: 100%; } }
+</style>
+
+<div class="success-container">
+    <div class="success-icon-wrapper animate__animated animate__zoomIn">
+        <!-- Ícone de Check do SVG -->
+        <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+        </svg>
+    </div>
+
+    <h1 class="success-title animate__animated animate__fadeInUp animate__delay-1s">MUITO OBRIGADO!</h1>
+    <p class="success-subtitle animate__animated animate__fadeInUp animate__delay-1s">Sua opinião é fundamental para Gravataí.</p>
+
+    <p class="animate__animated animate__fadeInUp animate__delay-2s" style="margin-bottom: 10px; font-size: 0.9rem; opacity: 0.8;">Retornando ao início...</p>
+    <div class="progress-bar-bg animate__animated animate__fadeInUp animate__delay-2s">
+        <div class="progress-bar-fill"></div>
     </div>
 </div>
 
 <script>
-    // Configura o tempo para 3 segundos
-    const tempoTotal = 3;
-    let tempoRestante = tempoTotal;
-
-    // Contador numérico
-    const timer = setInterval(() => {
-        tempoRestante--;
-        const el = document.getElementById('countdown');
-        if(el) el.innerText = tempoRestante;
-
-        if (tempoRestante <= 0) clearInterval(timer);
-    }, 1000);
-
-    // Barra visual
-    const bar = document.getElementById('redirectBar');
-    if(bar) {
-        bar.style.transition = `width ${tempoTotal}s linear`;
-        setTimeout(() => { bar.style.width = '0%'; }, 100);
-    }
-
-    // Redirecionamento
+    // Redireciona de volta para a tela inicial após exatos 7 segundos
     setTimeout(function() {
-        window.location.href = "{% url 'survey_home' %}";
-    }, tempoTotal * 1000);
+        window.location.href = "{% url 'home' %}"; // Ajuste 'home' para o nome exato da sua URL principal
+    }, 7000);
 </script>
 {% endblock %}
