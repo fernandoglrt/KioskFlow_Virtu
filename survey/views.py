@@ -1,4 +1,5 @@
 from django.views.generic import CreateView, TemplateView, View, ListView
+from django.views.generic import ListView # <- PRECISA TER ISSO NO TOPO
 from django.urls import reverse_lazy
 from .models import PesquisaGravatai
 from .forms import PesquisaForm
