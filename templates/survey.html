@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Animate.css para os efeitos visuais de erro -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <style>
     :root {
         --brand-green: #006233;
         --brand-yellow: #FFD100;
         --brand-blue: #002776;
+        --error-red: #ff4d4d;
     }
 
     html, body {
@@ -30,8 +33,7 @@
 
     .cover-wrapper {
         position: absolute;
-        top: 50%;
-        left: 50%;
+        top: 50%; left: 50%;
         transform: translate(-50%, -50%);
         display: flex; flex-direction: column; justify-content: center; align-items: center;
         text-align: center; width: 100%;
@@ -66,8 +68,9 @@
         font-size: 1.1rem; font-weight: 800; padding: 18px 45px;
         border-radius: 50px; border: none; text-transform: uppercase;
         width: auto; min-width: 260px; box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-        cursor: pointer;
+        cursor: pointer; transition: transform 0.2s ease;
     }
+    .btn-start-pill:active { transform: scale(0.95); }
 
     .question-wrapper {
         width: 100%; max-width: 480px;
@@ -75,7 +78,14 @@
         padding: 4vh 20px; box-sizing: border-box;
     }
 
-    .slide-title { font-size: 1.6rem; font-weight: 700; text-align: center; margin: 2vh 0 4vh 0; min-height: 2.5em; }
+    .slide-title { font-size: 1.6rem; font-weight: 700; text-align: center; margin: 2vh 0 2vh 0; min-height: 2.5em; }
+
+    /* Mensagem de Erro Premium */
+    .error-feedback {
+        display: none; color: var(--error-red); font-size: 1.1rem; font-weight: 800;
+        text-align: center; margin-bottom: 20px; background: rgba(255, 77, 77, 0.15);
+        padding: 10px; border-radius: 10px; border: 1px solid rgba(255, 77, 77, 0.3);
+    }
 
     .options-list { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding-bottom: 20px;}
 
@@ -92,16 +102,20 @@
         border-color: var(--brand-yellow);
         background: var(--brand-yellow);
         color: var(--brand-blue);
+        transform: scale(1.02);
     }
 
     .form-input-pill {
         width: 100%; padding: 20px; font-size: 1.4rem; border-radius: 15px;
         border: none; text-align: center; color: var(--brand-blue); box-sizing: border-box;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: border-color 0.3s;
     }
-    .form-input-pill:focus { outline: 3px solid var(--brand-yellow); }
+    .form-input-pill:focus { outline: none; border: 3px solid var(--brand-yellow); }
+    .form-input-pill.input-error { border: 3px solid var(--error-red); }
 
     .nav-buttons { display: flex; gap: 15px; margin-top: auto; padding-bottom: 4vh; width: 100%; }
-    .btn-nav { flex: 1; padding: 18px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; cursor: pointer;}
+    .btn-nav { flex: 1; padding: 18px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; cursor: pointer; transition: transform 0.2s ease;}
+    .btn-nav:active { transform: scale(0.95); }
     .btn-white { background: white; color: var(--brand-blue); }
     .btn-yellow { background: var(--brand-yellow); color: var(--brand-blue); }
 
@@ -133,8 +147,13 @@
 
     {% for field in form %}
     <div class="survey-slide" id="slide-{{ forloop.counter }}" data-step="{{ forloop.counter }}" data-name="{{ field.name }}">
-        <div class="question-wrapper">
+        <div class="question-wrapper" id="wrapper-{{ forloop.counter }}">
             <h2 class="slide-title">{{ field.label }}</h2>
+
+            <!-- Aviso de obrigatoriedade injetado dinamicamente -->
+            <div class="error-feedback" id="error-{{ forloop.counter }}">
+                <i class="fas fa-exclamation-triangle me-2"></i> Selecione uma resposta para avançar.
+            </div>
 
             <div class="options-list">
                 {% if field.field.widget.input_type == 'text' or field.field.widget.input_type == 'number' or field.field.widget.input_type == 'email' %}
@@ -157,7 +176,7 @@
             <div class="nav-buttons">
                 <button type="button" class="btn-nav btn-white" onclick="prevSlide()">Voltar</button>
                 {% if not forloop.last %}
-                    <button type="button" class="btn-nav btn-yellow" onclick="nextSlide(this)">Próximo</button>
+                    <button type="button" class="btn-nav btn-yellow" onclick="nextSlide()">Próximo</button>
                 {% else %}
                     <button type="button" class="btn-nav btn-yellow" onclick="forceSubmit()">Finalizar</button>
                 {% endif %}
@@ -172,7 +191,6 @@
     const slides = document.querySelectorAll('.survey-slide');
     const totalSlides = slides.length;
 
-    // --- LÓGICA DE PULO (Estava faltando!) ---
     const skipRules = { 'sexo_outro': { parent: 'sexo', expected: 'Outro' } };
 
     function shouldSkip(idx) {
@@ -182,10 +200,7 @@
         const name = slide.getAttribute('data-name');
         if (skipRules[name]) {
             const rule = skipRules[name];
-            // Procura a opção selecionada na pergunta "pai" (sexo)
             const selected = document.querySelector(`input[name="${rule.parent}"]:checked`);
-
-            // Se não tem nada selecionado OU o valor não é "Outro", deve pular!
             if (!selected || selected.value !== rule.expected) {
                 return true;
             }
@@ -193,21 +208,18 @@
         return false;
     }
 
-    // --- FUNÇÃO DE PLAY COM FORÇAMENTO DE ÁUDIO ---
     function togglePlay(box) {
         const video = box.querySelector('video');
         const playBtn = box.querySelector('.play-overlay');
 
         if (video.paused) {
-            video.muted = false; // FORÇA O NAVEGADOR A DESMUTAR
-            video.volume = 1.0;  // FORÇA O VOLUME NO MÁXIMO (100%)
-
+            video.muted = false;
+            video.volume = 1.0;
             let playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.then(_ => {
                     playBtn.style.display = 'none';
                 }).catch(error => {
-                    console.log("Navegador bloqueou o áudio:", error);
                     alert("Por favor, clique no botão de volume ou permita o áudio no navegador.");
                 });
             }
@@ -234,9 +246,57 @@
         }
     }
 
+    // --- NOVA LÓGICA DE VALIDAÇÃO DA ETAPA ---
+    function validateCurrentStep() {
+        if (currentStep === 0) return true; // Tela inicial não precisa validar
+
+        const currentSlide = slides[currentStep];
+        const wrapper = currentSlide.querySelector('.question-wrapper');
+        const errorFeedback = currentSlide.querySelector('.error-feedback');
+
+        let isValid = true;
+
+        // Checa inputs de rádio
+        const radios = currentSlide.querySelectorAll('input[type="radio"]');
+        if (radios.length > 0) {
+            isValid = Array.from(radios).some(radio => radio.checked);
+        }
+
+        // Checa inputs de texto/número
+        const textInputs = currentSlide.querySelectorAll('input[type="text"], input[type="number"], input[type="email"]');
+        if (textInputs.length > 0) {
+            isValid = Array.from(textInputs).every(input => {
+                if (input.value.trim() === '') {
+                    input.classList.add('input-error');
+                    return false;
+                }
+                input.classList.remove('input-error');
+                return true;
+            });
+            if (!isValid) {
+                errorFeedback.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Por favor, digite uma resposta válida.';
+            }
+        }
+
+        // Efeito de Erro (Shake + Mensagem) se for inválido
+        if (!isValid) {
+            errorFeedback.style.display = 'block';
+            wrapper.classList.remove('animate__animated', 'animate__headShake');
+            void wrapper.offsetWidth; // Gatilho de Reflow para reiniciar a animação
+            wrapper.classList.add('animate__animated', 'animate__headShake');
+            return false;
+        }
+
+        // Limpa erros caso esteja válido
+        if(errorFeedback) errorFeedback.style.display = 'none';
+        return true;
+    }
+
     function nextSlide() {
+        // Trava aqui se a validação falhar
+        if (!validateCurrentStep()) return;
+
         let n = currentStep + 1;
-        // Pula os slides que não devem aparecer
         while (shouldSkip(n)) { n++; }
 
         if (n < totalSlides) {
@@ -247,7 +307,6 @@
 
     function prevSlide() {
         let p = currentStep - 1;
-        // Volta pulando os slides que não deveriam ter aparecido
         while (p > 0 && shouldSkip(p)) { p--; }
 
         if (p >= 0) {
@@ -261,11 +320,14 @@
         const input = document.getElementById(inputId);
         if (input && input.type === 'radio') {
             input.checked = true;
-            setTimeout(() => { nextSlide(); }, 400);
+            // Se o usuário clicar na opção (Rádio), já está validado, avança após breve delay
+            setTimeout(() => { nextSlide(); }, 350);
         }
     }
 
     function forceSubmit() {
+        // Bloqueia o envio final se a última pergunta não estiver respondida
+        if (!validateCurrentStep()) return;
         document.getElementById('surveyForm').submit();
     }
 
