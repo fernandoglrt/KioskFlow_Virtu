@@ -93,7 +93,28 @@ class PesquisaForm(forms.ModelForm):
         ('Péssima', 'Péssima'),
         ('Não sei', 'Não sei'),
     ]
+    SENADOR_OPTS = [
+        ('Paulo Pimenta - PT', 'Paulo Pimenta - PT'),
+        ('Manuela Davila - PSOL', 'Manuela Davila - PSOL'),
+        ('Germano Rigotto - MDB', 'Germano Rigotto - MDB'),
+        ('Marcel Van Hatten - NOVO', 'Marcel Van Hatten - NOVO'),
+        ('Ubiratan Sanderson - PL', 'Ubiratan Sanderson - PL'),
+        ('Branco/Nulo', 'Branco/Nulo'),
+        ('Não sei', 'Não sei'),
+    ]
 
+    # --- CAMPO MAPEADO ---
+    voto_senador = forms.ChoiceField(
+        label='Se a eleição fosse hoje e os candidatos fossem estes, quem você votaria para ser Senador?',
+        choices=SENADOR_OPTS,
+        widget=forms.RadioSelect,
+        required=True,
+        error_messages={'required': 'Por favor, selecione um candidato ao Senado antes de continuar.'}
+    )
+
+    class Meta:
+        model = PesquisaGravatai
+        fields = '__all__'
     # --- CAMPOS MAPEADOS ---
     voto_presidente = forms.ChoiceField(
         label='Se as eleições fossem hoje, e os candidatos a presidência fossem estes, você votaria em:',

@@ -32,6 +32,7 @@ class PesquisaGravatai(models.Model):
     renda_familiar = models.CharField(max_length=50, choices=RENDA)
     nome = models.CharField(max_length=150)
     whatsapp = models.CharField(max_length=20, blank=True, null=True)
+    voto_senador = models.CharField(max_length=150, null=True, blank=True)
 
     def __str__(self):
         return self.nome
