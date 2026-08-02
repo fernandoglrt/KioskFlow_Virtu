@@ -1,0 +1,14 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div class="module" style="margin-bottom: 22px;">
+  <a href="{% url 'dashboard' %}" style="display:flex;align-items:center;justify-content:space-between;gap:16px;background:linear-gradient(135deg,#006a28,#009c3b);color:#fff;padding:22px 28px;border-radius:12px;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,0.15);">
+    <div>
+      <div style="font-size:1.25rem;font-weight:800;letter-spacing:-0.5px;">📊 Dashboard de Resultados</div>
+      <div style="opacity:.85;font-size:.9rem;margin-top:4px;">Indicadores, ranking de candidatos e evolução das respostas em tempo real</div>
+    </div>
+    <div style="font-size:1.8rem;">&rarr;</div>
+  </a>
+</div>
+{{ block.super }}
+{% endblock %}

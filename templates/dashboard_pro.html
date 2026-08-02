@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Pesquisa Gravataí</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --brand-green: #009c3b;
+    --brand-green-dark: #006a28;
+    --brand-yellow: #ffdf00;
+    --brand-blue: #002776;
+    --surface: #fcfcfb;
+    --page: #f4f6f5;
+    --ink: #14171a;
+    --ink-secondary: #52565c;
+    --ink-muted: #898781;
+    --line: #e6e8e6;
+    --track: rgba(0, 156, 59, 0.10);
+    --status-good: #0ca30c;
+    --status-warning: #d98c00;
+    --status-serious: #d1662f;
+    --status-critical: #d03b3b;
+    --status-neutral: #898781;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--ink);
+  }
+  a { color: inherit; }
+
+  .topbar {
+    background: linear-gradient(135deg, var(--brand-green-dark), var(--brand-green));
+    color: #fff;
+    padding: 28px clamp(20px, 4vw, 48px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .topbar-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
+  .topbar-sub { opacity: .85; font-size: .92rem; margin-top: 4px; }
+  .topbar-back {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
+    padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: .9rem;
+    text-decoration: none; transition: background .2s;
+  }
+  .topbar-back:hover { background: rgba(255,255,255,0.24); }
+
+  .wrap { max-width: 1320px; margin: 0 auto; padding: clamp(16px, 3vw, 32px); }
+
+  /* KPI tiles */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 28px; }
+  .kpi-tile {
+    background: var(--surface); border-radius: 16px; padding: 22px 24px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05);
+    border: 1px solid var(--line);
+  }
+  .kpi-label { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); margin: 0 0 8px; }
+  .kpi-value { font-size: 2.3rem; font-weight: 800; margin: 0; line-height: 1.1; color: var(--ink); }
+  .kpi-value small { font-size: 1rem; font-weight: 600; color: var(--ink-muted); }
+  .kpi-icon { float: right; width: 42px; height: 42px; border-radius: 12px; background: var(--track); color: var(--brand-green-dark); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+
+  /* Section */
+  .section-title { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin: 36px 0 16px; display: flex; align-items: center; gap: 10px; }
+  .section-title i { color: var(--brand-green-dark); }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .panel {
+    background: var(--surface); border-radius: 16px; padding: 24px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05);
+    border: 1px solid var(--line);
+  }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+
+  /* Ranking meter card */
+  .rank-card { background: var(--surface); border-radius: 16px; padding: 22px 24px; border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05); }
+  .rank-card h3 { font-size: .95rem; font-weight: 700; margin: 0 0 16px; color: var(--ink); }
+  .rank-row { margin-bottom: 14px; }
+  .rank-row:last-child { margin-bottom: 0; }
+  .rank-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; gap: 10px; }
+  .rank-name { font-size: .87rem; font-weight: 500; color: var(--ink-secondary); }
+  .rank-value { font-size: .87rem; font-weight: 700; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .rank-value small { font-weight: 500; color: var(--ink-muted); }
+  .rank-track { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+  .rank-fill { height: 100%; border-radius: 4px; background: var(--brand-green); }
+  .rank-empty { color: var(--ink-muted); font-size: .87rem; }
+
+  /* Status meter (avaliação) */
+  .status-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .status-row:last-child { margin-bottom: 0; }
+  .status-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .8rem; flex-shrink: 0; }
+  .status-good { background: var(--status-good); }
+  .status-warning { background: var(--status-warning); }
+  .status-serious { background: var(--status-serious); }
+  .status-critical { background: var(--status-critical); }
+  .status-neutral { background: var(--status-neutral); }
+  .status-body { flex: 1; }
+  .status-row-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .status-label { font-size: .87rem; font-weight: 600; color: var(--ink); }
+  .status-value { font-size: .87rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .status-value small { font-weight: 500; color: var(--ink-muted); }
+  .status-track { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .status-fill { height: 100%; border-radius: 4px; }
+
+  /* Timeline chart panel */
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* Recent table */
+  table.recent { width: 100%; border-collapse: collapse; }
+  table.recent th { text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); font-weight: 600; padding: 0 10px 12px; border-bottom: 1px solid var(--line); }
+  table.recent td { padding: 12px 10px; font-size: .88rem; color: var(--ink-secondary); border-bottom: 1px solid var(--line); }
+  table.recent tr:last-child td { border-bottom: none; }
+  table.recent td.name { color: var(--ink); font-weight: 600; }
+  table.recent td.time { font-variant-numeric: tabular-nums; color: var(--ink-muted); white-space: nowrap; }
+
+  @media (max-width: 640px) {
+    .topbar { padding: 22px 18px; }
+    .topbar-title { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <p class="topbar-title"><i class="fas fa-chart-line" style="color: var(--brand-yellow); margin-right:10px;"></i>Painel de Resultados</p>
+    <p class="topbar-sub">Pesquisa Gravataí 2026 · {{ total_respostas }} respostas monitoradas em tempo real</p>
+  </div>
+  <a class="topbar-back" href="/admin/"><i class="fas fa-arrow-left"></i> Voltar ao admin</a>
+</div>
+
+<div class="wrap">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-tile">
+      <div class="kpi-icon"><i class="fas fa-users"></i></div>
+      <p class="kpi-label">Total de respostas</p>
+      <p class="kpi-value">{{ total_respostas }}</p>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-icon"><i class="fas fa-calendar-day"></i></div>
+      <p class="kpi-label">Respostas hoje</p>
+      <p class="kpi-value">{{ respostas_hoje }}</p>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-icon"><i class="fas fa-calendar-week"></i></div>
+      <p class="kpi-label">Últimos 7 dias</p>
+      <p class="kpi-value">{{ respostas_7_dias }}</p>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+      <p class="kpi-label">Última resposta</p>
+      <p class="kpi-value" style="font-size: 1.3rem;">{% if ultima_resposta %}{{ ultima_resposta|date:"d/m/Y" }}<br><small>{{ ultima_resposta|date:"H:i" }}</small>{% else %}--{% endif %}</p>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="section-title"><i class="fas fa-chart-area"></i>Respostas ao longo do tempo</div>
+  <div class="panel">
+    <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
+  </div>
+
+  <!-- Avaliação Zaffallon -->
+  <div class="section-title"><i class="fas fa-gauge-high"></i>Avaliação do Governo Zaffallon</div>
+  <div class="panel">
+    {% if avaliacao_zaffallon %}
+      {% for item in avaliacao_zaffallon %}
+      <div class="status-row">
+        <div class="status-icon status-{{ item.status }}">
+          {% if item.status == 'good' %}<i class="fas fa-thumbs-up"></i>
+          {% elif item.status == 'warning' %}<i class="fas fa-minus"></i>
+          {% elif item.status == 'serious' %}<i class="fas fa-thumbs-down"></i>
+          {% elif item.status == 'critical' %}<i class="fas fa-triangle-exclamation"></i>
+          {% else %}<i class="fas fa-question"></i>{% endif %}
+        </div>
+        <div class="status-body">
+          <div class="status-row-top">
+            <span class="status-label">{{ item.label }}</span>
+            <span class="status-value">{{ item.total }} <small>({{ item.pct }}%)</small></span>
+          </div>
+          <div class="status-track"><div class="status-fill status-{{ item.status }}" style="width: {{ item.pct }}%;"></div></div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="rank-empty">Sem dados ainda.</p>
+    {% endif %}
+  </div>
+
+  <!-- Intenção de voto -->
+  <div class="section-title"><i class="fas fa-landmark"></i>Intenção de voto</div>
+  <div class="card-grid">
+    {% include 'partials/_ranking_card.html' with ranking=rankings.voto_presidente %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.voto_senador %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.candidato_governador %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.candidato_voto_hoje %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.rumo_governo_estado %}
+  </div>
+
+  <!-- Consideração / rejeição de candidatos -->
+  <div class="section-title"><i class="fas fa-check-double"></i>Candidatos a Deputado</div>
+  <div class="card-grid">
+    {% include 'partials/_ranking_card.html' with ranking=rankings.candidatos_poderia_votar %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.candidatos_rejeicao %}
+  </div>
+
+  <!-- Perfil -->
+  <div class="section-title"><i class="fas fa-id-card"></i>Perfil dos entrevistados</div>
+  <div class="card-grid">
+    {% include 'partials/_ranking_card.html' with ranking=rankings.regiao_residencia %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.sexo %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.faixa_etaria %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.escolaridade %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.ocupacao %}
+    {% include 'partials/_ranking_card.html' with ranking=rankings.renda_familiar %}
+  </div>
+
+  <!-- Últimas respostas -->
+  <div class="section-title"><i class="fas fa-list"></i>Últimas respostas</div>
+  <div class="panel">
+    {% if ultimas_respostas %}
+    <table class="recent">
+      <thead>
+        <tr><th>Nome</th><th>WhatsApp</th><th>Região</th><th>Data / hora</th></tr>
+      </thead>
+      <tbody>
+        {% for p in ultimas_respostas %}
+        <tr>
+          <td class="name">{{ p.nome }}</td>
+          <td>{{ p.whatsapp|default:"--" }}</td>
+          <td>{{ p.regiao_residencia|default:"--" }}</td>
+          <td class="time">{{ p.created_at|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="rank-empty">Nenhuma pesquisa registrada ainda.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+{{ timeline_labels|json_script:"timeline-labels" }}
+{{ timeline_values|json_script:"timeline-values" }}
+<script>
+  const labels = JSON.parse(document.getElementById('timeline-labels').textContent);
+  const values = JSON.parse(document.getElementById('timeline-values').textContent);
+  const ctx = document.getElementById('timelineChart');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Respostas',
+        data: values,
+        borderColor: '#2a78d6',
+        backgroundColor: 'rgba(42, 120, 214, 0.10)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: '#2a78d6',
+        pointBorderColor: '#fcfcfb',
+        pointBorderWidth: 2,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } } },
+        y: { beginAtZero: true, ticks: { precision: 0, color: '#898781', font: { size: 11 } }, grid: { color: '#e6e8e6' } },
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

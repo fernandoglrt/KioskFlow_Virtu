@@ -1,0 +1,16 @@
+<div class="rank-card">
+  <h3>{{ ranking.label }}</h3>
+  {% if ranking.items %}
+    {% for item in ranking.items %}
+    <div class="rank-row">
+      <div class="rank-row-top">
+        <span class="rank-name">{{ item.label }}</span>
+        <span class="rank-value">{{ item.total }} <small>({{ item.pct }}%)</small></span>
+      </div>
+      <div class="rank-track"><div class="rank-fill" style="width: {{ item.pct }}%;"></div></div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="rank-empty">Sem dados ainda.</p>
+  {% endif %}
+</div>
