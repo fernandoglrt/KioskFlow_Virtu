@@ -1,6 +1,7 @@
 services:
   # 1. O Site (Django)
   web:
+    container_name: kioskflow_virtu-web
     build: .
     command: >
       sh -c "python manage.py migrate &&
@@ -11,9 +12,19 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.raiox.rule=Host(`raiox.virtu-intelligence.com`)"
+      - "traefik.http.routers.raiox.entrypoints.websecure"
+      - "traefik.http.routers.raiox.tls=true"
+      - "traefik.http.services.raiox.loadbalancer.server.port=8000"
+    networks:
+      - web
 
   # 2. O Trabalhador (Celery - Envia E-mails)
   worker:
+    container_name: kioskflow_virtu-worker
     build: .
     # Comando Linux para rodar o celery (não precisa de --pool=solo aqui, pois Linux é nativo)
     command: celery -A core worker -l info
@@ -22,11 +33,21 @@ services:
     depends_on:
       - redis
       - web
+    networks:
+      - web
 
   # 3. O Banco de Memória (Redis)
   redis:
+    container_name: kioskflow_virtu-redis
     image: redis:7-alpine
     environment:
       - REDIS_HOST=redis
     ports:
       - "6379:6379"
+    networks:
+      - web
+      
+      
+networks:
+  web:
+    external: true
