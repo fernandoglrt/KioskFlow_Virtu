@@ -9,6 +9,8 @@ local_settings.py
 db.sqlite3
 media
 *.csv
+*.xlsx
+/exports/
 
 # Ambientes Virtuais
 .env
