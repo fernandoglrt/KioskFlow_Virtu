@@ -4,6 +4,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .admin_site import virtu_admin_site
+from .dedup import compute_duplicate_ids
 from .models import Answer, PesquisaGravatai, Question, QuestionOption
 from .tasks import enviar_email_task
 
@@ -59,8 +60,11 @@ class PesquisaGravataiAdmin(admin.ModelAdmin):
         'nome',
         'whatsapp',
         'created_at',
+        'is_duplicate',
         'reenviar_email_button',
     )
+    list_editable = ('is_duplicate',)
+    list_filter = ('is_duplicate',)
 
     # Barra de pesquisa
     search_fields = ('nome', 'whatsapp')
@@ -69,6 +73,14 @@ class PesquisaGravataiAdmin(admin.ModelAdmin):
     ordering = ('-id',)
     readonly_fields = ('created_at',)
     inlines = [AnswerInline]
+    actions = ['recalcular_duplicatas']
+
+    @admin.action(description='Recalcular duplicatas (respostas idênticas em sequência)')
+    def recalcular_duplicatas(self, request, queryset):
+        duplicate_ids = compute_duplicate_ids()
+        PesquisaGravatai.objects.update(is_duplicate=False)
+        updated = PesquisaGravatai.objects.filter(id__in=duplicate_ids).update(is_duplicate=True)
+        messages.success(request, f'{updated} resposta(s) marcada(s) como duplicata.')
 
     def reenviar_email_button(self, obj):
         url = reverse('admin:survey_pesquisagravatai_reenviar_email', args=[obj.pk])

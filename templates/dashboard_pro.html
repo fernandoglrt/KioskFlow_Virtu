@@ -75,6 +75,8 @@
   .kpi-tile::before {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand-green);
   }
+  .kpi-tile-warn::before { background: var(--status-warning); }
+  .kpi-tile-warn .kpi-icon { background: rgba(217, 140, 0, 0.12); color: var(--status-warning); }
   .kpi-label { font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-muted); margin: 0 0 8px; }
   .kpi-value { font-size: 2.15rem; font-weight: 800; margin: 0; line-height: 1.1; color: var(--ink); }
   .kpi-value small { font-size: .95rem; font-weight: 600; color: var(--ink-muted); }
@@ -167,6 +169,11 @@
       <div class="kpi-icon"><i class="fas fa-clock"></i></div>
       <p class="kpi-label">Última resposta</p>
       <p class="kpi-value" style="font-size: 1.25rem;">{% if ultima_resposta %}{{ ultima_resposta|date:"d/m/Y" }} <small>{{ ultima_resposta|date:"H:i" }}</small>{% else %}--{% endif %}</p>
+    </div>
+    <div class="kpi-tile kpi-tile-warn">
+      <div class="kpi-icon"><i class="fas fa-clone"></i></div>
+      <p class="kpi-label">Duplicatas filtradas</p>
+      <p class="kpi-value">{{ total_duplicatas }}</p>
     </div>
   </div>
 

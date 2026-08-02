@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.generic import FormView, TemplateView
 
+from .dedup import is_recent_duplicate
 from .forms import build_skip_rules, build_survey_form
 from .models import Answer, PesquisaGravatai, Question
 from .tasks import enviar_email_task
@@ -45,7 +46,11 @@ class SurveyView(FormView):
             email_payload[question.label] = stored
         Answer.objects.bulk_create(answers)
 
-        enviar_email_task.delay(email_payload)
+        if is_recent_duplicate(response):
+            response.is_duplicate = True
+            response.save(update_fields=['is_duplicate'])
+        else:
+            enviar_email_task.delay(email_payload)
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -64,9 +69,10 @@ class DashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        responses = PesquisaGravatai.objects.all()
+        responses = PesquisaGravatai.objects.filter(is_duplicate=False)
         total = responses.count()
         context['total_respostas'] = total
+        context['total_duplicatas'] = PesquisaGravatai.objects.filter(is_duplicate=True).count()
 
         hoje = timezone.localdate()
         context['respostas_hoje'] = responses.filter(created_at__date=hoje).count()
@@ -100,7 +106,7 @@ class DashboardView(TemplateView):
             .order_by('order', 'id')
         )
         for question in questions:
-            answers_qs = Answer.objects.filter(question=question).exclude(value='')
+            answers_qs = Answer.objects.filter(question=question, response__is_duplicate=False).exclude(value='')
             counter = Counter()
             if question.question_type == Question.CHECKBOX_MULTI:
                 for value in answers_qs.values_list('value', flat=True):

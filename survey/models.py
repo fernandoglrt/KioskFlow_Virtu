@@ -8,6 +8,10 @@ class PesquisaGravatai(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     nome = models.CharField(max_length=150)
     whatsapp = models.CharField(max_length=20, blank=True, null=True)
+    is_duplicate = models.BooleanField(
+        default=False, db_index=True, verbose_name='Duplicata',
+        help_text='Marcada automaticamente: respostas idênticas enviadas em sequência rápida (flood/toque duplo no totem).',
+    )
 
     class Meta:
         verbose_name = 'Pesquisa respondida'

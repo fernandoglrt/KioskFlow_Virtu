@@ -116,6 +116,7 @@
     .nav-buttons { display: flex; gap: 15px; margin-top: auto; padding-bottom: 4vh; width: 100%; }
     .btn-nav { flex: 1; padding: 18px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; cursor: pointer; transition: transform 0.2s ease;}
     .btn-nav:active { transform: scale(0.95); }
+    .btn-nav:disabled { opacity: 0.6; cursor: default; }
     .btn-white { background: white; color: var(--brand-blue); }
     .btn-yellow { background: var(--brand-yellow); color: var(--brand-blue); }
 
@@ -326,9 +327,15 @@
         }
     }
 
+    let submitted = false;
+
     function forceSubmit() {
         // Bloqueia o envio final se a última pergunta não estiver respondida
         if (!validateCurrentStep()) return;
+        // Trava contra toque duplo / dedo grudado no botão: só envia uma vez
+        if (submitted) return;
+        submitted = true;
+        document.querySelectorAll('.btn-nav').forEach((btn) => btn.disabled = true);
         document.getElementById('surveyForm').submit();
     }
 
