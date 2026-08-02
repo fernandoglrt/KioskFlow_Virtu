@@ -39,7 +39,9 @@ class Question(models.Model):
         help_text='Ex: "Intenção de voto", "Perfil demográfico". Deixe em branco pra cair em "Outras perguntas".',
     )
     help_text = models.CharField(max_length=255, blank=True, verbose_name='Texto de apoio (opcional)')
-    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default=RADIO)
+    question_type = models.CharField(
+        max_length=20, choices=QUESTION_TYPES, default=RADIO, verbose_name='Tipo de resposta',
+    )
     order = models.PositiveIntegerField(default=0)
     is_required = models.BooleanField(default=True, verbose_name='Obrigatória')
     is_active = models.BooleanField(default=True, verbose_name='Ativa no totem')
