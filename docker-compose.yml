@@ -33,6 +33,7 @@ services:
     depends_on:
       - redis
       - web
+    restart: always
     networks:
       - web
 
@@ -44,6 +45,7 @@ services:
       - REDIS_HOST=redis
     ports:
       - "6379:6379"
+    restart: always
     networks:
       - web
       
