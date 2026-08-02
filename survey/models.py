@@ -5,7 +5,7 @@ class PesquisaGravatai(models.Model):
     """Identidade do respondente. As respostas às perguntas em si ficam em Answer —
     ver Question/QuestionOption/Answer abaixo."""
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Enviada em')
     nome = models.CharField(max_length=150)
     whatsapp = models.CharField(max_length=20, blank=True, null=True)
     is_duplicate = models.BooleanField(
