@@ -2,37 +2,105 @@ from django.db import models
 
 
 class PesquisaGravatai(models.Model):
-    # Opções
-    SEXO_CHOICES = [('Masculino', 'Masculino'), ('Feminino', 'Feminino'), ('Outro', 'Outro')]
-    FAIXA_ETARIA = [('16-24', '16 a 24 anos'), ('25-34', '25 a 34 anos'), ('35-44', '35 a 44 anos'),
-                    ('45-59', '45 a 59 anos'), ('60+', '60 anos ou mais')]
-    ESCOLARIDADE = [('Analfabeto', 'Analfabeto'), ('Fundamental', 'Fundamental'), ('Medio', 'Ensino Médio'),
-                    ('Superior', 'Superior'), ('Pos', 'Pós-graduação')]
-    OCUPACAO = [('CLT', 'CLT'), ('Autonomo', 'Autônomo'), ('Empresario', 'Empresário'),
-                ('Servidor', 'Servidor Público'), ('Estudante', 'Estudante'),
-                ('Desempregado', 'Desempregado/Aposentado')]
-    RENDA = [('Ate 1', 'Até 1 SM'), ('1 a 2', '1 a 2 SM'), ('2 a 5', '2 a 5 SM'), ('5 a 10', '5 a 10 SM'),
-             ('Mais 10', 'Mais de 10 SM'), ('NaoResponder', 'Não responder')]
+    """Identidade do respondente. As respostas às perguntas em si ficam em Answer —
+    ver Question/QuestionOption/Answer abaixo."""
 
     created_at = models.DateTimeField(auto_now_add=True)
-    sexo = models.CharField(max_length=20, choices=SEXO_CHOICES)
-    sexo_outro = models.CharField(max_length=100, blank=True, null=True)
-    faixa_etaria = models.CharField(max_length=20, choices=FAIXA_ETARIA)
-    escolaridade = models.CharField(max_length=50, choices=ESCOLARIDADE)
-    ocupacao = models.CharField(max_length=50, choices=OCUPACAO)
-    regiao_residencia = models.CharField(max_length=150)
-    # Perguntas Eleitorais
-    candidatos_poderia_votar = models.TextField(verbose_name="Poderia Votar")
-    candidato_voto_hoje = models.CharField(max_length=100, verbose_name="Voto Hoje")
-    candidatos_rejeicao = models.TextField(verbose_name="Rejeição")
-    rumo_governo_estado = models.CharField(max_length=150, null=True, blank=True)
-    candidato_governador = models.CharField(max_length=100)
-    voto_presidente = models.CharField(max_length=150, null=True, blank=True)
-    voto_senador = models.CharField(max_length=150, null=True, blank=True)
-    avaliacao_zaffallon = models.CharField(max_length=50, null=True, blank=True)
-    renda_familiar = models.CharField(max_length=50, choices=RENDA)
     nome = models.CharField(max_length=150)
     whatsapp = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         return self.nome
+
+
+class Question(models.Model):
+    RADIO = 'radio'
+    CHECKBOX_MULTI = 'checkbox_multi'
+    TEXT = 'text'
+    NUMBER = 'number'
+    QUESTION_TYPES = [
+        (RADIO, 'Escolha única'),
+        (CHECKBOX_MULTI, 'Múltipla escolha'),
+        (TEXT, 'Texto curto'),
+        (NUMBER, 'Número'),
+    ]
+
+    key = models.SlugField(
+        max_length=60, unique=True,
+        help_text="Identificador interno estável — não mude depois que a pergunta já tiver respostas.",
+    )
+    label = models.CharField(max_length=255, verbose_name='Pergunta')
+    category = models.CharField(
+        max_length=100, blank=True, verbose_name='Categoria (agrupa no dashboard)',
+        help_text='Ex: "Intenção de voto", "Perfil demográfico". Deixe em branco pra cair em "Outras perguntas".',
+    )
+    help_text = models.CharField(max_length=255, blank=True, verbose_name='Texto de apoio (opcional)')
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default=RADIO)
+    order = models.PositiveIntegerField(default=0)
+    is_required = models.BooleanField(default=True, verbose_name='Obrigatória')
+    is_active = models.BooleanField(default=True, verbose_name='Ativa no totem')
+    is_system = models.BooleanField(
+        default=False, editable=False,
+        help_text='Campo de identificação do respondente (nome/whatsapp) — não pode ser excluído.',
+    )
+    depends_on = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='dependents',
+        verbose_name='Só exibir se a pergunta',
+    )
+    depends_on_value = models.CharField(
+        max_length=255, blank=True, verbose_name='...tiver a resposta',
+        help_text="Preencha junto com 'Só exibir se a pergunta' para pular esta pergunta condicionalmente.",
+    )
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.label
+
+
+class QuestionOption(models.Model):
+    STATUS_CHOICES = [
+        ('', '— nenhum —'),
+        ('good', 'Ótimo (verde)'),
+        ('warning', 'Neutro (amarelo)'),
+        ('serious', 'Ruim (laranja)'),
+        ('critical', 'Péssimo (vermelho)'),
+        ('neutral', 'Sem opinião (cinza)'),
+    ]
+
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='options')
+    label = models.CharField(max_length=255, verbose_name='Texto exibido')
+    value = models.CharField(
+        max_length=255, blank=True, verbose_name='Valor salvo (opcional)',
+        help_text='Se vazio, usa o próprio texto exibido. Só mude se souber o que está fazendo — respostas antigas usam o valor salvo pra contar certo no dashboard.',
+    )
+    order = models.PositiveIntegerField(default=0)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, blank=True, default='',
+        verbose_name='Status (opcional)',
+        help_text='Preenchendo o status em todas as opções, a pergunta vira um gráfico de avaliação no dashboard.',
+    )
+
+    class Meta:
+        ordering = ['order', 'id']
+        unique_together = [('question', 'label')]
+
+    def __str__(self):
+        return f'{self.label} ({self.question.key})'
+
+    @property
+    def effective_value(self):
+        return self.value or self.label
+
+
+class Answer(models.Model):
+    response = models.ForeignKey(PesquisaGravatai, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
+    value = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = [('response', 'question')]
+
+    def __str__(self):
+        return f'{self.question.key} = {self.value!r}'

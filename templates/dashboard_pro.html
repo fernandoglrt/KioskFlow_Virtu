@@ -171,11 +171,12 @@
     <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
   </div>
 
-  <!-- Avaliação Zaffallon -->
-  <div class="section-title"><i class="fas fa-gauge-high"></i>Avaliação do Governo Zaffallon</div>
+  <!-- Perguntas de avaliação (status good/warning/serious/critical) -->
+  {% for section in status_sections %}
+  <div class="section-title"><i class="fas fa-gauge-high"></i>{{ section.label }}</div>
   <div class="panel">
-    {% if avaliacao_zaffallon %}
-      {% for item in avaliacao_zaffallon %}
+    {% if section.items %}
+      {% for item in section.items %}
       <div class="status-row">
         <div class="status-icon status-{{ item.status }}">
           {% if item.status == 'good' %}<i class="fas fa-thumbs-up"></i>
@@ -197,34 +198,17 @@
       <p class="rank-empty">Sem dados ainda.</p>
     {% endif %}
   </div>
+  {% endfor %}
 
-  <!-- Intenção de voto -->
-  <div class="section-title"><i class="fas fa-landmark"></i>Intenção de voto</div>
+  <!-- Rankings agrupados por categoria da pergunta (definida no admin) -->
+  {% for category, items in ranking_categories.items %}
+  <div class="section-title"><i class="fas fa-chart-simple"></i>{{ category }}</div>
   <div class="card-grid">
-    {% include 'partials/_ranking_card.html' with ranking=rankings.voto_presidente %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.voto_senador %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.candidato_governador %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.candidato_voto_hoje %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.rumo_governo_estado %}
+    {% for ranking in items %}
+      {% include 'partials/_ranking_card.html' with ranking=ranking %}
+    {% endfor %}
   </div>
-
-  <!-- Consideração / rejeição de candidatos -->
-  <div class="section-title"><i class="fas fa-check-double"></i>Candidatos a Deputado</div>
-  <div class="card-grid">
-    {% include 'partials/_ranking_card.html' with ranking=rankings.candidatos_poderia_votar %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.candidatos_rejeicao %}
-  </div>
-
-  <!-- Perfil -->
-  <div class="section-title"><i class="fas fa-id-card"></i>Perfil dos entrevistados</div>
-  <div class="card-grid">
-    {% include 'partials/_ranking_card.html' with ranking=rankings.regiao_residencia %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.sexo %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.faixa_etaria %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.escolaridade %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.ocupacao %}
-    {% include 'partials/_ranking_card.html' with ranking=rankings.renda_familiar %}
-  </div>
+  {% endfor %}
 
   <!-- Últimas respostas -->
   <div class="section-title"><i class="fas fa-list"></i>Últimas respostas</div>
@@ -239,7 +223,7 @@
         <tr>
           <td class="name">{{ p.nome }}</td>
           <td>{{ p.whatsapp|default:"--" }}</td>
-          <td>{{ p.regiao_residencia|default:"--" }}</td>
+          <td>{{ p.regiao|default:"--" }}</td>
           <td class="time">{{ p.created_at|date:"d/m/Y H:i" }}</td>
         </tr>
         {% endfor %}

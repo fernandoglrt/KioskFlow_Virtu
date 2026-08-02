@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  :root, html[data-theme="light"] {
+    --primary: #009c3b;
+    --secondary: #006233;
+    --accent: #ffd100;
+    --primary-fg: #fff;
+    --link-fg: #006233;
+    --link-hover-color: #004d28;
+    --link-selected-fg: #006233;
+    --header-branding-color: var(--accent);
+    --breadcrumbs-bg: #004d28;
+    --breadcrumbs-fg: #c9e8d4;
+  }
+  html[data-theme="dark"] {
+    --primary: #1baf7a;
+    --secondary: #0b2e1c;
+    --accent: #ffd100;
+    --header-branding-color: var(--accent);
+  }
+  #header { box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  #site-name a { font-weight: 800; letter-spacing: -0.3px; }
+</style>
+{% endblock %}

@@ -1,7 +1,8 @@
-from django.contrib import admin
 from django.urls import path, include
 
+from survey.admin_site import virtu_admin_site
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', virtu_admin_site.urls),
     path('', include('survey.urls')),
 ]

@@ -4,68 +4,59 @@ from datetime import timedelta
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count
 from django.db.models.functions import TruncDate
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.views.generic import CreateView, TemplateView, View, ListView
-from django.views.generic import ListView # <- PRECISA TER ISSO NO TOPO
-from django.urls import reverse_lazy
-from .models import PesquisaGravatai
-from .forms import PesquisaForm
+from django.views.generic import FormView, TemplateView
+
+from .forms import build_skip_rules, build_survey_form
+from .models import Answer, PesquisaGravatai, Question
 from .tasks import enviar_email_task
 
-# Campos de escolha unica exibidos como ranking no dashboard
-RANKED_FIELDS = [
-    ('voto_presidente', 'Presidência'),
-    ('voto_senador', 'Senado'),
-    ('candidato_governador', 'Governo do Estado'),
-    ('candidato_voto_hoje', 'Deputado (voto hoje)'),
-    ('rumo_governo_estado', 'Rumo do Governo do Estado'),
-    ('regiao_residencia', 'Região de residência'),
-    ('sexo', 'Sexo'),
-    ('faixa_etaria', 'Faixa etária'),
-    ('escolaridade', 'Escolaridade'),
-    ('ocupacao', 'Ocupação'),
-    ('renda_familiar', 'Renda familiar'),
-]
 
-# Campos de multipla escolha (salvos como string separada por ", ")
-MULTI_VALUE_FIELDS = [
-    ('candidatos_poderia_votar', 'Candidatos considerados (Deputado)'),
-    ('candidatos_rejeicao', 'Candidatos rejeitados (Deputado)'),
-]
-
-ZAFFALLON_ORDER = ['Ótima', 'Boa', 'Regular', 'Ruim', 'Péssima', 'Não sei']
-ZAFFALLON_STATUS = {
-    'Ótima': 'good',
-    'Boa': 'good',
-    'Regular': 'warning',
-    'Ruim': 'serious',
-    'Péssima': 'critical',
-    'Não sei': 'neutral',
-}
-
-class SurveyView(CreateView):
-    model = PesquisaGravatai
-    form_class = PesquisaForm
+class SurveyView(FormView):
     template_name = 'survey.html'
     success_url = reverse_lazy('survey_success')
 
+    def get_form(self, form_class=None):
+        return build_survey_form(data=self.request.POST or None)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['skip_rules'] = build_skip_rules()
+        return context
+
     def form_valid(self, form):
-        print("✅ SUCESSO! Formulário válido. Salvando...")
-        response = super().form_valid(form)
-        enviar_email_task.delay(form.cleaned_data)
-        return response
+        cleaned = dict(form.cleaned_data)
+        response = PesquisaGravatai.objects.create(
+            nome=(cleaned.pop('nome', '') or '').strip(),
+            whatsapp=cleaned.pop('whatsapp', '') or None,
+        )
 
+        questions_by_key = {q.key: q for q in Question.objects.filter(key__in=cleaned.keys())}
+        answers = []
+        email_payload = {}
+        for key, value in cleaned.items():
+            question = questions_by_key.get(key)
+            if question is None or not value:
+                continue
+            stored = ', '.join(value) if isinstance(value, list) else str(value)
+            answers.append(Answer(response=response, question=question, value=stored))
+            email_payload[question.label] = stored
+        Answer.objects.bulk_create(answers)
 
-    # ADICIONE ISTO AQUI PARA VER O ERRO:
+        enviar_email_task.delay(email_payload)
+        return super().form_valid(form)
+
     def form_invalid(self, form):
         print("❌ ERRO NO FORMULÁRIO!")
-        print(form.errors)  # Vai imprimir no terminal qual campo está travando
+        print(form.errors)
         return super().form_invalid(form)
 
 
 class SuccessView(TemplateView):
     template_name = 'success.html'
+
 
 @method_decorator(staff_member_required, name='dispatch')
 class DashboardView(TemplateView):
@@ -73,70 +64,82 @@ class DashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = PesquisaGravatai.objects.all()
-        total = qs.count()
+        responses = PesquisaGravatai.objects.all()
+        total = responses.count()
         context['total_respostas'] = total
 
         hoje = timezone.localdate()
-        context['respostas_hoje'] = qs.filter(created_at__date=hoje).count()
-        context['respostas_7_dias'] = qs.filter(created_at__gte=timezone.now() - timedelta(days=7)).count()
-        ultima = qs.order_by('-created_at').first()
+        context['respostas_hoje'] = responses.filter(created_at__date=hoje).count()
+        context['respostas_7_dias'] = responses.filter(created_at__gte=timezone.now() - timedelta(days=7)).count()
+        ultima = responses.order_by('-created_at').first()
         context['ultima_resposta'] = ultima.created_at if ultima else None
-        context['ultimas_respostas'] = qs.order_by('-created_at')[:8]
 
-        rankings = {}
-        for field, label in RANKED_FIELDS:
-            rows = (
-                qs.exclude(**{f'{field}__isnull': True})
-                  .exclude(**{field: ''})
-                  .values(field)
-                  .annotate(total=Count('id'))
-                  .order_by('-total')
-            )
-            items = [
-                {
-                    'label': row[field],
-                    'total': row['total'],
-                    'pct': round(row['total'] / total * 100, 1) if total else 0,
-                }
-                for row in rows
-            ]
-            rankings[field] = {'label': label, 'items': items}
-
-        for field, label in MULTI_VALUE_FIELDS:
-            counter = Counter()
-            for value in qs.exclude(**{field: ''}).values_list(field, flat=True):
-                for item in (value or '').split(','):
-                    item = item.strip()
-                    if item:
-                        counter[item] += 1
-            items = [
-                {'label': k, 'total': v, 'pct': round(v / total * 100, 1) if total else 0}
-                for k, v in counter.most_common()
-            ]
-            rankings[field] = {'label': label, 'items': items}
-
-        context['rankings'] = rankings
-
-        zaff_counts = dict(
-            qs.exclude(avaliacao_zaffallon__isnull=True)
-              .exclude(avaliacao_zaffallon='')
-              .values_list('avaliacao_zaffallon')
-              .annotate(total=Count('id'))
+        recent = list(responses.order_by('-created_at')[:8])
+        regiao_by_response = dict(
+            Answer.objects.filter(question__key='regiao_residencia', response__in=recent)
+            .values_list('response_id', 'value')
         )
-        context['avaliacao_zaffallon'] = [
+        context['ultimas_respostas'] = [
             {
-                'label': label,
-                'total': zaff_counts[label],
-                'pct': round(zaff_counts[label] / total * 100, 1) if total else 0,
-                'status': ZAFFALLON_STATUS.get(label, 'neutral'),
+                'nome': r.nome,
+                'whatsapp': r.whatsapp,
+                'regiao': regiao_by_response.get(r.id, ''),
+                'created_at': r.created_at,
             }
-            for label in ZAFFALLON_ORDER if label in zaff_counts
+            for r in recent
         ]
 
+        categories = {}
+        status_sections = []
+
+        questions = (
+            Question.objects.filter(is_active=True, is_system=False)
+            .prefetch_related('options')
+            .order_by('order', 'id')
+        )
+        for question in questions:
+            answers_qs = Answer.objects.filter(question=question).exclude(value='')
+            counter = Counter()
+            if question.question_type == Question.CHECKBOX_MULTI:
+                for value in answers_qs.values_list('value', flat=True):
+                    for item in value.split(','):
+                        item = item.strip()
+                        if item:
+                            counter[item] += 1
+            else:
+                for row in answers_qs.values('value').annotate(total=Count('id')):
+                    counter[row['value']] = row['total']
+
+            options = list(question.options.all())
+            status_by_value = {opt.effective_value: opt.status for opt in options if opt.status}
+            is_status_question = bool(status_by_value) and all(v in status_by_value for v in counter)
+
+            if is_status_question:
+                items = []
+                for opt in options:
+                    v = opt.effective_value
+                    if v in counter:
+                        items.append({
+                            'label': opt.label,
+                            'total': counter[v],
+                            'pct': round(counter[v] / total * 100, 1) if total else 0,
+                            'status': opt.status or 'neutral',
+                        })
+                status_sections.append({'label': question.label, 'items': items})
+            else:
+                items = [
+                    {'label': label, 'total': qty, 'pct': round(qty / total * 100, 1) if total else 0}
+                    for label, qty in counter.most_common()
+                ]
+                category = question.category or 'Outras perguntas'
+                categories.setdefault(category, []).append({'label': question.label, 'items': items})
+
+        context['ranking_categories'] = categories
+        context['status_sections'] = status_sections
+
         timeline = (
-            qs.annotate(dia=TruncDate('created_at'))
-              .values('dia').annotate(total=Count('id')).order_by('dia')
+            responses.annotate(dia=TruncDate('created_at'))
+            .values('dia').annotate(total=Count('id')).order_by('dia')
         )
         context['timeline_labels'] = [t['dia'].strftime('%d/%m') for t in timeline]
         context['timeline_values'] = [t['total'] for t in timeline]

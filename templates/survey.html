@@ -186,12 +186,13 @@
     {% endfor %}
 </form>
 
+{{ skip_rules|json_script:"skip-rules-data" }}
 <script>
     let currentStep = 0;
     const slides = document.querySelectorAll('.survey-slide');
     const totalSlides = slides.length;
 
-    const skipRules = { 'sexo_outro': { parent: 'sexo', expected: 'Outro' } };
+    const skipRules = JSON.parse(document.getElementById('skip-rules-data').textContent);
 
     function shouldSkip(idx) {
         const slide = slides[idx];
