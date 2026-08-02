@@ -9,6 +9,10 @@ class PesquisaGravatai(models.Model):
     nome = models.CharField(max_length=150)
     whatsapp = models.CharField(max_length=20, blank=True, null=True)
 
+    class Meta:
+        verbose_name = 'Pesquisa respondida'
+        verbose_name_plural = 'Pesquisas respondidas'
+
     def __str__(self):
         return self.nome
 
@@ -54,6 +58,8 @@ class Question(models.Model):
 
     class Meta:
         ordering = ['order', 'id']
+        verbose_name = 'Pergunta'
+        verbose_name_plural = 'Perguntas'
 
     def __str__(self):
         return self.label
@@ -85,6 +91,8 @@ class QuestionOption(models.Model):
     class Meta:
         ordering = ['order', 'id']
         unique_together = [('question', 'label')]
+        verbose_name = 'Opção de resposta'
+        verbose_name_plural = 'Opções de resposta'
 
     def __str__(self):
         return f'{self.label} ({self.question.key})'
