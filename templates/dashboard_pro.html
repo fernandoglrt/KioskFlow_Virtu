@@ -7,24 +7,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
   :root {
     --brand-green: #009c3b;
     --brand-green-dark: #006a28;
     --brand-yellow: #ffdf00;
     --brand-blue: #002776;
-    --surface: #fcfcfb;
-    --page: #f4f6f5;
+    --surface: #ffffff;
+    --page: #f2f4f3;
     --ink: #14171a;
     --ink-secondary: #52565c;
     --ink-muted: #898781;
-    --line: #e6e8e6;
-    --track: rgba(0, 156, 59, 0.10);
+    --line: #e9ebe9;
+    --grid: #eef0ee;
+    --track: rgba(0, 156, 59, 0.08);
     --status-good: #0ca30c;
     --status-warning: #d98c00;
     --status-serious: #d1662f;
     --status-critical: #d03b3b;
     --status-neutral: #898781;
+    --shadow: 0 1px 2px rgba(20,23,26,0.04), 0 10px 28px rgba(20,23,26,0.06);
   }
   * { box-sizing: border-box; }
   body {
@@ -32,100 +35,102 @@
     background: var(--page);
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     color: var(--ink);
+    -webkit-font-smoothing: antialiased;
   }
   a { color: inherit; }
 
   .topbar {
     background: linear-gradient(135deg, var(--brand-green-dark), var(--brand-green));
     color: #fff;
-    padding: 28px clamp(20px, 4vw, 48px);
+    padding: 26px clamp(20px, 4vw, 48px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 16px;
+    position: sticky; top: 0; z-index: 20;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   }
-  .topbar-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
-  .topbar-sub { opacity: .85; font-size: .92rem; margin-top: 4px; }
+  .topbar-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; display: flex; align-items: center; }
+  .topbar-sub { opacity: .85; font-size: .88rem; margin-top: 3px; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #6bffa0; display: inline-block; margin-right: 7px; box-shadow: 0 0 0 0 rgba(107,255,160,.6); animation: pulse 2s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(107,255,160,.55); } 70% { box-shadow: 0 0 0 7px rgba(107,255,160,0); } 100% { box-shadow: 0 0 0 0 rgba(107,255,160,0); } }
   .topbar-back {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
-    padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: .9rem;
+    padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: .87rem;
     text-decoration: none; transition: background .2s;
   }
   .topbar-back:hover { background: rgba(255,255,255,0.24); }
 
-  .wrap { max-width: 1320px; margin: 0 auto; padding: clamp(16px, 3vw, 32px); }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: clamp(16px, 3vw, 32px); }
 
   /* KPI tiles */
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 28px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
   .kpi-tile {
-    background: var(--surface); border-radius: 16px; padding: 22px 24px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05);
-    border: 1px solid var(--line);
+    background: var(--surface); border-radius: 14px; padding: 20px 22px;
+    box-shadow: var(--shadow); border: 1px solid var(--line);
+    position: relative; overflow: hidden;
   }
-  .kpi-label { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); margin: 0 0 8px; }
-  .kpi-value { font-size: 2.3rem; font-weight: 800; margin: 0; line-height: 1.1; color: var(--ink); }
-  .kpi-value small { font-size: 1rem; font-weight: 600; color: var(--ink-muted); }
-  .kpi-icon { float: right; width: 42px; height: 42px; border-radius: 12px; background: var(--track); color: var(--brand-green-dark); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+  .kpi-tile::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand-green);
+  }
+  .kpi-label { font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-muted); margin: 0 0 8px; }
+  .kpi-value { font-size: 2.15rem; font-weight: 800; margin: 0; line-height: 1.1; color: var(--ink); }
+  .kpi-value small { font-size: .95rem; font-weight: 600; color: var(--ink-muted); }
+  .kpi-icon { float: right; width: 38px; height: 38px; border-radius: 10px; background: var(--track); color: var(--brand-green-dark); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
 
   /* Section */
-  .section-title { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin: 36px 0 16px; display: flex; align-items: center; gap: 10px; }
-  .section-title i { color: var(--brand-green-dark); }
+  .section-title {
+    font-size: .82rem; font-weight: 700; color: var(--ink-secondary); text-transform: uppercase; letter-spacing: .07em;
+    margin: 38px 0 14px; display: flex; align-items: center; gap: 9px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .section-title i { color: var(--brand-green); font-size: .95rem; }
   .section-title:first-of-type { margin-top: 0; }
 
   .panel {
-    background: var(--surface); border-radius: 16px; padding: 24px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05);
-    border: 1px solid var(--line);
+    background: var(--surface); border-radius: 14px; padding: 22px;
+    box-shadow: var(--shadow); border: 1px solid var(--line);
   }
 
-  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
 
-  /* Ranking meter card */
-  .rank-card { background: var(--surface); border-radius: 16px; padding: 22px 24px; border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05); }
-  .rank-card h3 { font-size: .95rem; font-weight: 700; margin: 0 0 16px; color: var(--ink); }
-  .rank-row { margin-bottom: 14px; }
-  .rank-row:last-child { margin-bottom: 0; }
-  .rank-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; gap: 10px; }
-  .rank-name { font-size: .87rem; font-weight: 500; color: var(--ink-secondary); }
-  .rank-value { font-size: .87rem; font-weight: 700; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .rank-value small { font-weight: 500; color: var(--ink-muted); }
-  .rank-track { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
-  .rank-fill { height: 100%; border-radius: 4px; background: var(--brand-green); }
-  .rank-empty { color: var(--ink-muted); font-size: .87rem; }
+  .chart-card {
+    background: var(--surface); border-radius: 14px; padding: 18px 20px 8px;
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+  .chart-card h3 {
+    font-size: .88rem; font-weight: 700; margin: 0 0 6px; color: var(--ink);
+    line-height: 1.3;
+  }
+  .chart-card .chart-meta { font-size: .74rem; color: var(--ink-muted); margin-bottom: 10px; }
+  .chart-canvas-wrap { position: relative; width: 100%; }
 
-  /* Status meter (avaliação) */
-  .status-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-  .status-row:last-child { margin-bottom: 0; }
-  .status-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .8rem; flex-shrink: 0; }
-  .status-good { background: var(--status-good); }
-  .status-warning { background: var(--status-warning); }
-  .status-serious { background: var(--status-serious); }
-  .status-critical { background: var(--status-critical); }
-  .status-neutral { background: var(--status-neutral); }
-  .status-body { flex: 1; }
-  .status-row-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .status-label { font-size: .87rem; font-weight: 600; color: var(--ink); }
-  .status-value { font-size: .87rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .status-value small { font-weight: 500; color: var(--ink-muted); }
-  .status-track { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
-  .status-fill { height: 100%; border-radius: 4px; }
+  .status-card { background: var(--surface); border-radius: 14px; padding: 20px 22px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .status-card h3 { font-size: .92rem; font-weight: 700; margin: 0 0 4px; color: var(--ink); }
+  .status-card .chart-meta { font-size: .74rem; color: var(--ink-muted); margin-bottom: 4px; }
+  .status-canvas-wrap { position: relative; width: 100%; margin-top: 6px; }
 
   /* Timeline chart panel */
-  .chart-wrap { position: relative; height: 260px; }
+  .chart-wrap { position: relative; height: 280px; }
 
   /* Recent table */
   table.recent { width: 100%; border-collapse: collapse; }
-  table.recent th { text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); font-weight: 600; padding: 0 10px 12px; border-bottom: 1px solid var(--line); }
-  table.recent td { padding: 12px 10px; font-size: .88rem; color: var(--ink-secondary); border-bottom: 1px solid var(--line); }
+  table.recent th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); font-weight: 600; padding: 0 10px 12px; border-bottom: 1px solid var(--line); }
+  table.recent td { padding: 12px 10px; font-size: .87rem; color: var(--ink-secondary); border-bottom: 1px solid var(--line); }
   table.recent tr:last-child td { border-bottom: none; }
+  table.recent tr { transition: background .15s; }
+  table.recent tr:hover { background: var(--page); }
   table.recent td.name { color: var(--ink); font-weight: 600; }
   table.recent td.time { font-variant-numeric: tabular-nums; color: var(--ink-muted); white-space: nowrap; }
+  .empty-note { color: var(--ink-muted); font-size: .87rem; }
 
   @media (max-width: 640px) {
-    .topbar { padding: 22px 18px; }
-    .topbar-title { font-size: 1.3rem; }
+    .topbar { padding: 20px 18px; position: static; }
+    .topbar-title { font-size: 1.25rem; }
   }
 </style>
 </head>
@@ -133,7 +138,7 @@
 
 <div class="topbar">
   <div>
-    <p class="topbar-title"><i class="fas fa-chart-line" style="color: var(--brand-yellow); margin-right:10px;"></i>Painel de Resultados</p>
+    <p class="topbar-title"><span class="live-dot"></span>Painel de Resultados</p>
     <p class="topbar-sub">Pesquisa Gravataí 2026 · {{ total_respostas }} respostas monitoradas em tempo real</p>
   </div>
   <a class="topbar-back" href="/admin/"><i class="fas fa-arrow-left"></i> Voltar ao admin</a>
@@ -161,7 +166,7 @@
     <div class="kpi-tile">
       <div class="kpi-icon"><i class="fas fa-clock"></i></div>
       <p class="kpi-label">Última resposta</p>
-      <p class="kpi-value" style="font-size: 1.3rem;">{% if ultima_resposta %}{{ ultima_resposta|date:"d/m/Y" }}<br><small>{{ ultima_resposta|date:"H:i" }}</small>{% else %}--{% endif %}</p>
+      <p class="kpi-value" style="font-size: 1.25rem;">{% if ultima_resposta %}{{ ultima_resposta|date:"d/m/Y" }} <small>{{ ultima_resposta|date:"H:i" }}</small>{% else %}--{% endif %}</p>
     </div>
   </div>
 
@@ -171,41 +176,30 @@
     <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
   </div>
 
-  <!-- Perguntas de avaliação (status good/warning/serious/critical) -->
-  {% for section in status_sections %}
-  <div class="section-title"><i class="fas fa-gauge-high"></i>{{ section.label }}</div>
-  <div class="panel">
-    {% if section.items %}
-      {% for item in section.items %}
-      <div class="status-row">
-        <div class="status-icon status-{{ item.status }}">
-          {% if item.status == 'good' %}<i class="fas fa-thumbs-up"></i>
-          {% elif item.status == 'warning' %}<i class="fas fa-minus"></i>
-          {% elif item.status == 'serious' %}<i class="fas fa-thumbs-down"></i>
-          {% elif item.status == 'critical' %}<i class="fas fa-triangle-exclamation"></i>
-          {% else %}<i class="fas fa-question"></i>{% endif %}
-        </div>
-        <div class="status-body">
-          <div class="status-row-top">
-            <span class="status-label">{{ item.label }}</span>
-            <span class="status-value">{{ item.total }} <small>({{ item.pct }}%)</small></span>
-          </div>
-          <div class="status-track"><div class="status-fill status-{{ item.status }}" style="width: {{ item.pct }}%;"></div></div>
-        </div>
-      </div>
-      {% endfor %}
-    {% else %}
-      <p class="rank-empty">Sem dados ainda.</p>
-    {% endif %}
+  <!-- Perguntas de avaliação (escala diverging: bom -> ruim) -->
+  {% if status_sections %}
+  <div class="section-title"><i class="fas fa-gauge-high"></i>Avaliação</div>
+  <div class="status-grid">
+    {% for section in status_sections %}
+    <div class="status-card">
+      <h3>{{ section.label }}</h3>
+      <p class="chart-meta">Distribuição das respostas, ruim → bom</p>
+      <div class="status-canvas-wrap"><canvas id="{{ section.id }}"></canvas></div>
+    </div>
+    {% endfor %}
   </div>
-  {% endfor %}
+  {% endif %}
 
   <!-- Rankings agrupados por categoria da pergunta (definida no admin) -->
-  {% for category, items in ranking_categories.items %}
-  <div class="section-title"><i class="fas fa-chart-simple"></i>{{ category }}</div>
-  <div class="card-grid">
-    {% for ranking in items %}
-      {% include 'partials/_ranking_card.html' with ranking=ranking %}
+  {% for cat in ranking_categories %}
+  <div class="section-title"><i class="fas fa-chart-simple"></i>{{ cat.name }}</div>
+  <div class="chart-grid">
+    {% for chart in cat.charts %}
+    <div class="chart-card">
+      <h3>{{ chart.label }}</h3>
+      <p class="chart-meta">{{ chart.items|length }} opç{{ chart.items|length|pluralize:"ão,ões" }} de resposta</p>
+      <div class="chart-canvas-wrap"><canvas id="{{ chart.id }}"></canvas></div>
+    </div>
     {% endfor %}
   </div>
   {% endfor %}
@@ -230,7 +224,7 @@
       </tbody>
     </table>
     {% else %}
-      <p class="rank-empty">Nenhuma pesquisa registrada ainda.</p>
+      <p class="empty-note">Nenhuma pesquisa registrada ainda.</p>
     {% endif %}
   </div>
 
@@ -238,24 +232,39 @@
 
 {{ timeline_labels|json_script:"timeline-labels" }}
 {{ timeline_values|json_script:"timeline-values" }}
+{{ chart_specs_json|json_script:"chart-specs-data" }}
 <script>
-  const labels = JSON.parse(document.getElementById('timeline-labels').textContent);
-  const values = JSON.parse(document.getElementById('timeline-values').textContent);
-  const ctx = document.getElementById('timelineChart');
-  new Chart(ctx, {
+(function () {
+  const INK_SECONDARY = '#52565c';
+  const INK_MUTED = '#898781';
+  const GRID = '#eef0ee';
+  const SURFACE = '#ffffff';
+  const BRAND_GREEN = '#009c3b';
+  const STATUS_COLORS = {
+    good: '#0ca30c', warning: '#d98c00', serious: '#d1662f',
+    critical: '#d03b3b', neutral: '#898781',
+  };
+
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
+
+  // ---- Timeline (line + area) ----
+  const timelineLabels = JSON.parse(document.getElementById('timeline-labels').textContent);
+  const timelineValues = JSON.parse(document.getElementById('timeline-values').textContent);
+  new Chart(document.getElementById('timelineChart'), {
     type: 'line',
     data: {
-      labels: labels,
+      labels: timelineLabels,
       datasets: [{
         label: 'Respostas',
-        data: values,
+        data: timelineValues,
         borderColor: '#2a78d6',
         backgroundColor: 'rgba(42, 120, 214, 0.10)',
         borderWidth: 2,
-        pointRadius: 3,
-        pointBackgroundColor: '#2a78d6',
-        pointBorderColor: '#fcfcfb',
-        pointBorderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#2a78d6',
+        pointHoverBorderColor: SURFACE,
+        pointHoverBorderWidth: 2,
         tension: 0.3,
         fill: true,
       }]
@@ -263,13 +272,141 @@
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#14171a', padding: 10, cornerRadius: 8,
+          titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+          callbacks: { label: (ctx) => ` ${ctx.parsed.y} resposta${ctx.parsed.y === 1 ? '' : 's'}` },
+        },
+      },
       scales: {
-        x: { grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } } },
-        y: { beginAtZero: true, ticks: { precision: 0, color: '#898781', font: { size: 11 } }, grid: { color: '#e6e8e6' } },
+        x: { grid: { display: false }, ticks: { color: INK_MUTED, font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+        y: { beginAtZero: true, ticks: { precision: 0, color: INK_MUTED, font: { size: 11 } }, grid: { color: GRID } },
       }
     }
   });
+
+  // ---- Ranking bars + status (avaliação) bars ----
+  const specs = JSON.parse(document.getElementById('chart-specs-data').textContent);
+
+  function sizeForBars(canvas, count) {
+    const wrap = canvas.parentElement;
+    wrap.style.height = Math.max(140, count * 38 + 24) + 'px';
+  }
+
+  function renderBarChart(spec) {
+    const canvas = document.getElementById(spec.id);
+    if (!canvas) return;
+    sizeForBars(canvas, spec.items.length);
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: spec.items.map((i) => i.label),
+        datasets: [{
+          data: spec.items.map((i) => i.total),
+          backgroundColor: BRAND_GREEN,
+          borderRadius: 4,
+          maxBarThickness: 22,
+          categoryPercentage: 0.75,
+          barPercentage: 0.9,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { right: 46 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#14171a', padding: 10, cornerRadius: 8,
+            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+            callbacks: {
+              title: (items) => spec.items[items[0].dataIndex].label,
+              label: (ctx) => {
+                const item = spec.items[ctx.dataIndex];
+                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%)`;
+              },
+            },
+          },
+          datalabels: {
+            anchor: 'end', align: 'end', clamp: true,
+            color: INK_SECONDARY, font: { size: 11, weight: '600' },
+            formatter: (value, ctx) => {
+              const item = spec.items[ctx.dataIndex];
+              return `${item.total} (${item.pct}%)`;
+            },
+          },
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { color: GRID }, ticks: { display: false }, border: { display: false } },
+          y: { grid: { display: false }, border: { display: false }, ticks: { color: INK_SECONDARY, font: { size: 11.5 } } },
+        },
+      },
+      plugins: [ChartDataLabels],
+    });
+  }
+
+  function renderStatusChart(spec) {
+    const canvas = document.getElementById(spec.id);
+    if (!canvas) return;
+    canvas.parentElement.style.height = '54px';
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: [''],
+        datasets: spec.items.map((item) => ({
+          label: item.label,
+          data: [item.pct],
+          backgroundColor: STATUS_COLORS[item.status] || STATUS_COLORS.neutral,
+          borderRadius: 3,
+          maxBarThickness: 40,
+        })),
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom', align: 'start',
+            labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 9, boxHeight: 9, padding: 14, font: { size: 11.5 }, color: INK_SECONDARY },
+          },
+          tooltip: {
+            backgroundColor: '#14171a', padding: 10, cornerRadius: 8,
+            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+            callbacks: {
+              title: (items) => spec.items[items[0].datasetIndex].label,
+              label: (ctx) => {
+                const item = spec.items[ctx.datasetIndex];
+                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%)`;
+              },
+            },
+          },
+          datalabels: {
+            color: '#fff', font: { size: 11, weight: '700' },
+            formatter: (value) => (value >= 7 ? `${value}%` : ''),
+          },
+        },
+        scales: {
+          x: { stacked: true, max: 100, display: false },
+          y: { stacked: true, display: false },
+        },
+      },
+      plugins: [ChartDataLabels],
+    });
+  }
+
+  specs.forEach((spec) => {
+    if (spec.kind === 'status') {
+      renderStatusChart(spec);
+    } else {
+      renderBarChart(spec);
+    }
+  });
+})();
 </script>
 
 </body>

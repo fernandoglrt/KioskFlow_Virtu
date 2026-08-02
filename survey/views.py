@@ -89,8 +89,10 @@ class DashboardView(TemplateView):
             for r in recent
         ]
 
-        categories = {}
         status_sections = []
+        category_order = []
+        charts_by_category = {}
+        chart_seq = 0
 
         questions = (
             Question.objects.filter(is_active=True, is_system=False)
@@ -114,6 +116,9 @@ class DashboardView(TemplateView):
             status_by_value = {opt.effective_value: opt.status for opt in options if opt.status}
             is_status_question = bool(status_by_value) and all(v in status_by_value for v in counter)
 
+            chart_seq += 1
+            chart_id = f'chart-{chart_seq}'
+
             if is_status_question:
                 items = []
                 for opt in options:
@@ -125,17 +130,27 @@ class DashboardView(TemplateView):
                             'pct': round(counter[v] / total * 100, 1) if total else 0,
                             'status': opt.status or 'neutral',
                         })
-                status_sections.append({'label': question.label, 'items': items})
-            else:
+                status_sections.append({'id': chart_id, 'label': question.label, 'items': items})
+            elif counter:
                 items = [
                     {'label': label, 'total': qty, 'pct': round(qty / total * 100, 1) if total else 0}
                     for label, qty in counter.most_common()
                 ]
                 category = question.category or 'Outras perguntas'
-                categories.setdefault(category, []).append({'label': question.label, 'items': items})
+                if category not in charts_by_category:
+                    charts_by_category[category] = []
+                    category_order.append(category)
+                charts_by_category[category].append({'id': chart_id, 'label': question.label, 'items': items})
 
-        context['ranking_categories'] = categories
+        ranking_categories = [
+            {'name': name, 'charts': charts_by_category[name]} for name in category_order
+        ]
+        context['ranking_categories'] = ranking_categories
         context['status_sections'] = status_sections
+        context['chart_specs_json'] = (
+            [{**s, 'kind': 'status'} for s in status_sections]
+            + [{**c, 'kind': 'bar'} for cat in ranking_categories for c in cat['charts']]
+        )
 
         timeline = (
             responses.annotate(dia=TruncDate('created_at'))
