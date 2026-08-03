@@ -510,10 +510,17 @@
     const statusSections = [];
     QUESTIONS.forEach((q) => {
       const counter = new Map();
+      // Denominador correto pro percentual: quantas pessoas RESPONDERAM essa
+      // pergunta especifica — nao o total geral de respostas do dashboard.
+      // Perguntas adicionadas depois (voto_presidente, voto_senador, avaliacao_zaffallon
+      // etc) nunca foram feitas pras respostas mais antigas, entao usar o total geral
+      // como denominador fazia os percentuais nao somarem 100%.
+      let questionTotal = 0;
       filtered.forEach((r) => {
         const ans = answersByResponse.get(r.id);
         const v = ans && ans.get(q.id);
         if (!v) return;
+        questionTotal += 1;
         if (q.type === 'checkbox_multi') {
           v.split(',').forEach((item) => { item = item.trim(); if (item) counter.set(item, (counter.get(item) || 0) + 1); });
         } else {
@@ -528,12 +535,12 @@
       if (isStatus) {
         const items = q.options.filter((o) => counter.has(o.value)).map((o) => ({
           label: o.label, value: o.value, total: counter.get(o.value),
-          pct: total ? round1(counter.get(o.value) / total * 100) : 0, status: o.status || 'neutral',
+          pct: questionTotal ? round1(counter.get(o.value) / questionTotal * 100) : 0, status: o.status || 'neutral',
         }));
         if (items.length) statusSections.push({ questionId: q.id, label: q.label, items });
       } else {
         const items = [...counter.entries()].sort((a, b) => b[1] - a[1]).map(([label, qty]) => ({
-          label, value: label, total: qty, pct: total ? round1(qty / total * 100) : 0,
+          label, value: label, total: qty, pct: questionTotal ? round1(qty / questionTotal * 100) : 0,
         }));
         const cat = q.category;
         if (!rankingsByCategory.has(cat)) rankingsByCategory.set(cat, []);
