@@ -136,7 +136,8 @@
 
   /* Seletor de cargo (streamgraph) */
   .header-controls { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; text-transform: none; letter-spacing: normal; }
-  .cargo-selector, .granularity-selector { display: flex; gap: 4px; }
+  .cargo-selector, .granularity-selector, .accumulation-selector { display: flex; gap: 4px; }
+  .accumulation-selector { padding-right: 10px; border-right: 1px solid var(--line); }
   .cargo-opt {
     font-size: .78rem; font-weight: 600; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line);
     background: var(--surface); color: var(--ink-muted); cursor: pointer;
@@ -299,6 +300,7 @@
   <div class="section-title">
     <i class="fas fa-water"></i>Evolução dos candidatos
     <span class="header-controls">
+      <span class="accumulation-selector" id="accumulationSelector"></span>
       <span class="granularity-selector" id="granularitySelector"></span>
       <span class="cargo-selector" id="cargoSelector"></span>
     </span>
@@ -370,6 +372,8 @@
   let selectedCargoKey = 'candidato_voto_hoje';
   const GRANULARITY_DEFS = [{ key: 'day', label: 'Dia' }, { key: 'month', label: 'Mês' }];
   let selectedGranularity = 'month';
+  const ACCUMULATION_DEFS = [{ key: 'period', label: 'Por período' }, { key: 'cumulative', label: 'Acumulado' }];
+  let selectedAccumulation = 'period';
 
   Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
@@ -790,6 +794,13 @@
       data: bucketKeys.map((bk) => buckets.get(bk).get(o.value) || 0),
     })).filter((ds) => ds.data.some((v) => v > 0));
 
+    if (selectedAccumulation === 'cumulative') {
+      datasets.forEach((ds) => {
+        let running = 0;
+        ds.data = ds.data.map((v) => (running += v));
+      });
+    }
+
     const labels = bucketKeys.map((bk) => bucketLabelFor(bk, selectedGranularity));
     return { labels, datasets };
   }
@@ -872,6 +883,18 @@
       btn.addEventListener('click', () => {
         selectedGranularity = btn.dataset.gran;
         el.querySelectorAll('.cargo-opt').forEach((b) => b.classList.toggle('active', b.dataset.gran === selectedGranularity));
+        buildStreamChart();
+      });
+    });
+  }
+
+  function buildAccumulationSelector() {
+    const el = document.getElementById('accumulationSelector');
+    el.innerHTML = ACCUMULATION_DEFS.map((a) => `<span class="cargo-opt pressable${a.key === selectedAccumulation ? ' active' : ''}" data-acc="${a.key}">${escapeHtml(a.label)}</span>`).join('');
+    el.querySelectorAll('.cargo-opt').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedAccumulation = btn.dataset.acc;
+        el.querySelectorAll('.cargo-opt').forEach((b) => b.classList.toggle('active', b.dataset.acc === selectedAccumulation));
         buildStreamChart();
       });
     });
@@ -975,6 +998,7 @@
 
   buildCargoSelector();
   buildGranularitySelector();
+  buildAccumulationSelector();
   buildDrawerBody();
   renderAll();
   const dupEl = document.getElementById('kpiDuplicatas');
