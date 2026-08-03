@@ -1,11 +1,5 @@
-from collections import Counter
-from datetime import timedelta
-
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count
-from django.db.models.functions import TruncDate
 from django.urls import reverse_lazy
-from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.generic import FormView, TemplateView
 
@@ -65,124 +59,42 @@ class SuccessView(TemplateView):
 
 @method_decorator(staff_member_required, name='dispatch')
 class DashboardView(TemplateView):
+    """Manda os dados crus pro front (perguntas, respostas, respostas-a-perguntas)
+    e deixa o JS calcular tudo (rankings, KPIs, filtros) no navegador — assim
+    clicar num gráfico filtra a tela inteira na hora, sem recarregar a página."""
     template_name = 'dashboard_pro.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        responses = PesquisaGravatai.objects.filter(is_duplicate=False)
-
-        active_filters = []
-        for token in self.request.GET.getlist('f'):
-            qid_str, _, value = token.partition(':')
-            if not value or not qid_str.isdigit():
-                continue
-            question = Question.objects.filter(id=int(qid_str)).first()
-            if question is None:
-                continue
-            responses = responses.filter(answers__question_id=question.id, answers__value__icontains=value)
-            active_filters.append({'token': token, 'label': question.label, 'value': value})
-        responses = responses.distinct()
-        response_ids = list(responses.values_list('id', flat=True))
-
-        context['active_filters'] = active_filters
-
-        total = responses.count()
-        context['total_respostas'] = total
-        context['total_duplicatas'] = PesquisaGravatai.objects.filter(is_duplicate=True).count()
-
-        hoje = timezone.localdate()
-        context['respostas_hoje'] = responses.filter(created_at__date=hoje).count()
-        context['respostas_7_dias'] = responses.filter(created_at__gte=timezone.now() - timedelta(days=7)).count()
-        ultima = responses.order_by('-created_at').first()
-        context['ultima_resposta'] = ultima.created_at if ultima else None
-
-        recent = list(responses.order_by('-created_at')[:8])
-        regiao_by_response = dict(
-            Answer.objects.filter(question__key='regiao_residencia', response__in=recent)
-            .values_list('response_id', 'value')
-        )
-        context['ultimas_respostas'] = [
-            {
-                'nome': r.nome,
-                'whatsapp': r.whatsapp,
-                'regiao': regiao_by_response.get(r.id, ''),
-                'created_at': r.created_at,
-            }
-            for r in recent
-        ]
-
-        status_sections = []
-        category_order = []
-        charts_by_category = {}
-        chart_seq = 0
 
         questions = (
             Question.objects.filter(is_active=True, is_system=False)
             .prefetch_related('options')
             .order_by('order', 'id')
         )
-        for question in questions:
-            answers_qs = Answer.objects.filter(question=question, response_id__in=response_ids).exclude(value='')
-            counter = Counter()
-            if question.question_type == Question.CHECKBOX_MULTI:
-                for value in answers_qs.values_list('value', flat=True):
-                    for item in value.split(','):
-                        item = item.strip()
-                        if item:
-                            counter[item] += 1
-            else:
-                for row in answers_qs.values('value').annotate(total=Count('id')):
-                    counter[row['value']] = row['total']
-
-            options = list(question.options.all())
-            status_by_value = {opt.effective_value: opt.status for opt in options if opt.status}
-            is_status_question = bool(status_by_value) and all(v in status_by_value for v in counter)
-
-            chart_seq += 1
-            chart_id = f'chart-{chart_seq}'
-
-            if is_status_question:
-                items = []
-                for opt in options:
-                    v = opt.effective_value
-                    if v in counter:
-                        items.append({
-                            'label': opt.label,
-                            'total': counter[v],
-                            'pct': round(counter[v] / total * 100, 1) if total else 0,
-                            'status': opt.status or 'neutral',
-                        })
-                status_sections.append(
-                    {'id': chart_id, 'question_id': question.id, 'label': question.label, 'items': items}
-                )
-            elif counter:
-                items = [
-                    {'label': label, 'total': qty, 'pct': round(qty / total * 100, 1) if total else 0}
-                    for label, qty in counter.most_common()
-                ]
-                category = question.category or 'Outras perguntas'
-                if category not in charts_by_category:
-                    charts_by_category[category] = []
-                    category_order.append(category)
-                charts_by_category[category].append(
-                    {'id': chart_id, 'question_id': question.id, 'label': question.label, 'items': items}
-                )
-
-        ranking_categories = [
-            {'name': name, 'charts': charts_by_category[name]} for name in category_order
+        context['export_questions'] = [
+            {
+                'id': q.id,
+                'label': q.label,
+                'category': q.category or 'Outras perguntas',
+                'type': q.question_type,
+                'options': [
+                    {'label': o.label, 'value': o.effective_value, 'status': o.status}
+                    for o in q.options.all()
+                ],
+            }
+            for q in questions
         ]
-        context['ranking_categories'] = ranking_categories
-        context['status_sections'] = status_sections
-        context['chart_specs_json'] = (
-            [{**s, 'kind': 'status'} for s in status_sections]
-            + [{**c, 'kind': 'bar'} for cat in ranking_categories for c in cat['charts']]
+
+        responses = PesquisaGravatai.objects.filter(is_duplicate=False).order_by('created_at')
+        context['export_responses'] = list(responses.values('id', 'nome', 'whatsapp', 'created_at'))
+
+        response_ids = [r['id'] for r in context['export_responses']]
+        context['export_answers'] = list(
+            Answer.objects.filter(response_id__in=response_ids, question__in=questions)
+            .exclude(value='')
+            .values_list('response_id', 'question_id', 'value')
         )
 
-        timeline = (
-            responses.annotate(dia=TruncDate('created_at'))
-            .values('dia').annotate(total=Count('id')).order_by('dia')
-        )
-        context['timeline_labels'] = [t['dia'].strftime('%d/%m') for t in timeline]
-        context['timeline_values'] = [t['total'] for t in timeline]
-
+        context['total_duplicatas'] = PesquisaGravatai.objects.filter(is_duplicate=True).count()
         return context

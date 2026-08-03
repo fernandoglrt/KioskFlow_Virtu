@@ -27,7 +27,6 @@
     --status-serious: #d1662f;
     --status-critical: #d03b3b;
     --status-neutral: #898781;
-    --shadow: 0 1px 2px rgba(20,23,26,0.04), 0 10px 28px rgba(20,23,26,0.06);
   }
   * { box-sizing: border-box; }
   body {
@@ -40,7 +39,6 @@
   }
   a { color: inherit; }
 
-  /* Superfície "skeuomórfica": leve gloss no topo + sombra dupla dando volume */
   .surface {
     position: relative;
     background: var(--surface);
@@ -61,22 +59,14 @@
       0 18px 36px rgba(20,23,26,0.10),
       0 0 0 1px rgba(0,156,59,0.14);
   }
-
-  /* Botões e chips "pressáveis" */
-  .pressable {
-    transition: transform .12s ease, box-shadow .12s ease, background .15s ease;
-  }
+  .pressable { transition: transform .12s ease, box-shadow .12s ease, background .15s ease; }
   .pressable:active { transform: translateY(1px) scale(0.98); }
 
   .topbar {
     background: linear-gradient(135deg, var(--brand-green-dark), var(--brand-green));
     color: #fff;
     padding: 26px clamp(20px, 4vw, 48px);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
     position: sticky; top: 0; z-index: 20;
     box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   }
@@ -95,7 +85,7 @@
 
   .wrap { max-width: 1400px; margin: 0 auto; padding: clamp(16px, 3vw, 32px); }
 
-  /* Barra de filtros ativos (cross-filter: clicar num gráfico filtra a tela toda) */
+  /* Barra de filtros ativos */
   .filter-bar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
     margin-bottom: 22px; padding: 12px 14px;
@@ -116,7 +106,6 @@
     all: unset; display: flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
     background: rgba(0,106,40,0.14); color: var(--brand-green-dark); font-size: .68rem;
-    transition: background .15s;
   }
   .filter-chip button:hover { background: rgba(0,106,40,0.26); }
   .filter-clear {
@@ -127,13 +116,8 @@
 
   /* KPI tiles */
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .kpi-tile {
-    padding: 20px 22px;
-    position: relative; overflow: hidden;
-  }
-  .kpi-tile::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand-green);
-  }
+  .kpi-tile { padding: 20px 22px; position: relative; overflow: hidden; }
+  .kpi-tile::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand-green); }
   .kpi-tile-warn::before { background: var(--status-warning); }
   .kpi-tile-warn .kpi-icon { background: rgba(217, 140, 0, 0.12); color: var(--status-warning); }
   .kpi-label { font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-muted); margin: 0 0 8px; }
@@ -151,18 +135,14 @@
   .section-title:first-of-type { margin-top: 0; }
 
   .panel { padding: 22px; }
+  .split-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .split-grid { grid-template-columns: 1fr; } }
 
   .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
   .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
 
-  .chart-card {
-    padding: 18px 20px 8px;
-    display: flex; flex-direction: column;
-  }
-  .chart-card h3 {
-    font-size: .88rem; font-weight: 700; margin: 0 0 6px; color: var(--ink);
-    line-height: 1.3;
-  }
+  .chart-card { padding: 18px 20px 8px; display: flex; flex-direction: column; }
+  .chart-card h3 { font-size: .88rem; font-weight: 700; margin: 0 0 6px; color: var(--ink); line-height: 1.3; }
   .chart-card .chart-meta { font-size: .74rem; color: var(--ink-muted); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .chart-canvas-wrap { position: relative; width: 100%; cursor: pointer; }
 
@@ -174,10 +154,8 @@
   .clickable-hint { font-size: .68rem; color: var(--ink-muted); opacity: 0; transition: opacity .15s; white-space: nowrap; }
   .chart-card:hover .clickable-hint, .status-card:hover .clickable-hint { opacity: 1; }
 
-  /* Timeline chart panel */
-  .chart-wrap { position: relative; height: 280px; }
+  .chart-wrap { position: relative; height: 260px; }
 
-  /* Recent table */
   table.recent { width: 100%; border-collapse: collapse; }
   table.recent th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); font-weight: 600; padding: 0 10px 12px; border-bottom: 1px solid var(--line); }
   table.recent td { padding: 12px 10px; font-size: .87rem; color: var(--ink-secondary); border-bottom: 1px solid var(--line); }
@@ -188,9 +166,67 @@
   table.recent td.time { font-variant-numeric: tabular-nums; color: var(--ink-muted); white-space: nowrap; }
   .empty-note { color: var(--ink-muted); font-size: .87rem; }
 
+  /* Botão flutuante de filtros */
+  .fab {
+    position: fixed; right: 26px; bottom: 26px; z-index: 60;
+    display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(160deg, var(--brand-green), var(--brand-green-dark));
+    color: #fff; border: none; border-radius: 999px; padding: 16px 22px;
+    font-family: inherit; font-size: .92rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 10px 24px rgba(0,106,40,0.35), 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease;
+  }
+  .fab:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 16px 32px rgba(0,106,40,0.4), 0 4px 10px rgba(0,0,0,0.18); }
+  .fab:active { transform: translateY(0) scale(0.97); }
+  .fab-badge {
+    background: var(--brand-yellow); color: var(--brand-blue); font-size: .72rem; font-weight: 800;
+    min-width: 20px; height: 20px; border-radius: 999px; display: none; align-items: center; justify-content: center; padding: 0 5px;
+  }
+  .fab-badge.show { display: flex; }
+
+  /* Painel/gaveta de filtros */
+  .drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(10,15,12,0.32); backdrop-filter: blur(2px);
+    z-index: 70; opacity: 0; pointer-events: none; transition: opacity .25s ease;
+  }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: min(400px, 92vw);
+    background: var(--surface); z-index: 71; box-shadow: -12px 0 40px rgba(0,0,0,0.18);
+    transform: translateX(100%); transition: transform .28s cubic-bezier(.2,.8,.2,1);
+    display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-header {
+    padding: 20px 22px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, var(--brand-green-dark), var(--brand-green)); color: #fff;
+  }
+  .drawer-header h2 { font-size: 1.05rem; margin: 0; font-weight: 800; }
+  .drawer-header button { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.16); }
+  .drawer-header button:hover { background: rgba(255,255,255,0.28); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .drawer-group { padding: 14px 22px; border-bottom: 1px solid var(--line); }
+  .drawer-cat { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brand-green-dark); margin: 4px 0 10px; }
+  .drawer-question { margin-bottom: 14px; }
+  .drawer-question:last-child { margin-bottom: 0; }
+  .drawer-question-label { font-size: .84rem; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+  .drawer-options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .drawer-opt {
+    font-size: .78rem; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--page); color: var(--ink-secondary); cursor: pointer; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .drawer-opt .n { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  .drawer-opt.active { background: linear-gradient(180deg, #e9f8ee, #dcf3e3); border-color: rgba(0,156,59,0.4); color: var(--brand-green-dark); font-weight: 700; }
+  .drawer-footer { padding: 16px 22px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+  .drawer-footer .count { font-size: .82rem; color: var(--ink-muted); }
+  .drawer-footer .count strong { color: var(--ink); }
+
   @media (max-width: 640px) {
     .topbar { padding: 20px 18px; position: static; }
     .topbar-title { font-size: 1.25rem; }
+    .fab span.fab-label { display: none; }
   }
 </style>
 </head>
@@ -199,47 +235,35 @@
 <div class="topbar">
   <div>
     <p class="topbar-title"><span class="live-dot"></span>Painel de Resultados</p>
-    <p class="topbar-sub">Pesquisa Gravataí 2026 · {{ total_respostas }} respostas monitoradas em tempo real</p>
+    <p class="topbar-sub"><span id="topbarCount">{{ export_responses|length }}</span> respostas monitoradas em tempo real</p>
   </div>
   <a class="topbar-back" href="/admin/"><i class="fas fa-arrow-left"></i> Voltar ao admin</a>
 </div>
 
 <div class="wrap">
 
-  <!-- Filtros ativos (clique num gráfico pra filtrar a tela toda) -->
-  {% if active_filters %}
-  <div class="filter-bar">
-    <span class="filter-bar-label"><i class="fas fa-filter"></i> Filtrando por</span>
-    {% for f in active_filters %}
-    <span class="filter-chip"><span class="chip-q">{{ f.label }}:</span> {{ f.value }}
-      <button type="button" class="pressable" onclick="removeFilter('{{ f.token|escapejs }}')" aria-label="Remover filtro">✕</button>
-    </span>
-    {% endfor %}
-    <span class="filter-clear pressable" onclick="clearFilters()">Limpar tudo</span>
-  </div>
-  {% endif %}
+  <div id="filterBar" class="filter-bar" style="display:none;"></div>
 
-  <!-- KPIs -->
   <div class="kpi-grid">
     <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-users"></i></div>
       <p class="kpi-label">Total de respostas</p>
-      <p class="kpi-value" data-count="{{ total_respostas }}">0</p>
+      <p class="kpi-value" id="kpiTotal" data-count="0">0</p>
     </div>
     <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-calendar-day"></i></div>
       <p class="kpi-label">Respostas hoje</p>
-      <p class="kpi-value" data-count="{{ respostas_hoje }}">0</p>
+      <p class="kpi-value" id="kpiHoje" data-count="0">0</p>
     </div>
     <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-calendar-week"></i></div>
       <p class="kpi-label">Últimos 7 dias</p>
-      <p class="kpi-value" data-count="{{ respostas_7_dias }}">0</p>
+      <p class="kpi-value" id="kpi7d" data-count="0">0</p>
     </div>
     <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-clock"></i></div>
       <p class="kpi-label">Última resposta</p>
-      <p class="kpi-value" style="font-size: 1.25rem;">{% if ultima_resposta %}{{ ultima_resposta|date:"d/m/Y" }} <small>{{ ultima_resposta|date:"H:i" }}</small>{% else %}--{% endif %}</p>
+      <p class="kpi-value" id="kpiUltima" style="font-size: 1.25rem;">--</p>
     </div>
     <div class="kpi-tile kpi-tile-warn surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-clone"></i></div>
@@ -248,126 +272,54 @@
     </div>
   </div>
 
-  <!-- Timeline -->
   <div class="section-title"><i class="fas fa-chart-area"></i>Respostas ao longo do tempo</div>
-  <div class="panel surface">
-    <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
-  </div>
-
-  <!-- Perguntas de avaliação (escala diverging: bom -> ruim) -->
-  {% if status_sections %}
-  <div class="section-title"><i class="fas fa-gauge-high"></i>Avaliação</div>
-  <div class="status-grid">
-    {% for section in status_sections %}
-    <div class="status-card surface surface-hover">
-      <h3>{{ section.label }}</h3>
-      <p class="chart-meta"><span>Distribuição das respostas, ruim → bom</span><span class="clickable-hint"><i class="fas fa-hand-pointer"></i> clique pra filtrar</span></p>
-      <div class="status-canvas-wrap"><canvas id="{{ section.id }}"></canvas></div>
+  <div class="split-grid">
+    <div class="panel surface">
+      <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
     </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <!-- Rankings agrupados por categoria da pergunta (definida no admin) -->
-  {% for cat in ranking_categories %}
-  <div class="section-title"><i class="fas fa-chart-simple"></i>{{ cat.name }}</div>
-  <div class="chart-grid">
-    {% for chart in cat.charts %}
-    <div class="chart-card surface surface-hover">
-      <h3>{{ chart.label }}</h3>
-      <p class="chart-meta"><span>{{ chart.items|length }} opç{{ chart.items|length|pluralize:"ão,ões" }}</span><span class="clickable-hint"><i class="fas fa-hand-pointer"></i> clique pra filtrar</span></p>
-      <div class="chart-canvas-wrap"><canvas id="{{ chart.id }}"></canvas></div>
+    <div class="panel surface">
+      <div class="chart-wrap"><canvas id="dowChart"></canvas></div>
     </div>
-    {% endfor %}
   </div>
-  {% endfor %}
 
-  <!-- Últimas respostas -->
+  <div id="statusSectionsWrap"></div>
+  <div id="rankingCategoriesWrap"></div>
+
   <div class="section-title"><i class="fas fa-list"></i>Últimas respostas</div>
   <div class="panel surface">
-    {% if ultimas_respostas %}
     <table class="recent">
       <thead>
         <tr><th>Nome</th><th>WhatsApp</th><th>Região</th><th>Data / hora</th></tr>
       </thead>
-      <tbody>
-        {% for p in ultimas_respostas %}
-        <tr>
-          <td class="name">{{ p.nome }}</td>
-          <td>{{ p.whatsapp|default:"--" }}</td>
-          <td>{{ p.regiao|default:"--" }}</td>
-          <td class="time">{{ p.created_at|date:"d/m/Y H:i" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
+      <tbody id="recentTableBody"></tbody>
     </table>
-    {% else %}
-      <p class="empty-note">Nenhuma pesquisa registrada ainda.</p>
-    {% endif %}
+    <p class="empty-note" id="recentEmptyNote" style="display:none;">Nenhuma pesquisa registrada ainda.</p>
   </div>
 
 </div>
 
-{{ timeline_labels|json_script:"timeline-labels" }}
-{{ timeline_values|json_script:"timeline-values" }}
-{{ chart_specs_json|json_script:"chart-specs-data" }}
-{{ active_filters|json_script:"active-filters-data" }}
-<script>
-  // ---- Cross-filter: clicar numa barra/segmento filtra a tela toda ----
-  function navigateWithTokens(tokens) {
-    const params = new URLSearchParams(window.location.search);
-    params.delete('f');
-    tokens.forEach((t) => params.append('f', t));
-    sessionStorage.setItem('dashScrollY', String(window.scrollY));
-    const qs = params.toString();
-    window.location.href = window.location.pathname + (qs ? '?' + qs : '');
-  }
+<button type="button" class="fab pressable" id="fabButton">
+  <i class="fas fa-sliders"></i>
+  <span class="fab-label">Filtros</span>
+  <span class="fab-badge" id="fabBadge">0</span>
+</button>
 
-  function currentTokens() {
-    return new URLSearchParams(window.location.search).getAll('f');
-  }
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h2><i class="fas fa-filter"></i> Filtros</h2>
+    <button type="button" id="drawerClose"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-footer">
+    <span class="count"><strong id="drawerCount">0</strong> respostas correspondem</span>
+    <span class="filter-clear pressable" id="drawerClear">Limpar filtros</span>
+  </div>
+</div>
 
-  function toggleFilter(questionId, value) {
-    const token = questionId + ':' + value;
-    const tokens = currentTokens();
-    const idx = tokens.indexOf(token);
-    if (idx >= 0) { tokens.splice(idx, 1); } else { tokens.push(token); }
-    navigateWithTokens(tokens);
-  }
-
-  function removeFilter(token) {
-    navigateWithTokens(currentTokens().filter((t) => t !== token));
-  }
-
-  function clearFilters() {
-    navigateWithTokens([]);
-  }
-
-  // Restaura a posição de scroll depois de um clique-filtro (a navegação é reload completo)
-  (function restoreScroll() {
-    const y = sessionStorage.getItem('dashScrollY');
-    if (y !== null) {
-      sessionStorage.removeItem('dashScrollY');
-      window.scrollTo(0, parseInt(y, 10));
-    }
-  })();
-
-  // Contador animado nos KPIs
-  (function animateCounters() {
-    document.querySelectorAll('.kpi-value[data-count]').forEach((el) => {
-      const target = parseInt(el.getAttribute('data-count'), 10) || 0;
-      const duration = 700;
-      const start = performance.now();
-      function tick(now) {
-        const p = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(eased * target).toLocaleString('pt-BR');
-        if (p < 1) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    });
-  })();
-</script>
+{{ export_questions|json_script:"export-questions" }}
+{{ export_responses|json_script:"export-responses" }}
+{{ export_answers|json_script:"export-answers" }}
 <script>
 (function () {
   const INK_SECONDARY = '#52565c';
@@ -375,123 +327,242 @@
   const GRID = '#eef0ee';
   const SURFACE = '#ffffff';
   const BRAND_GREEN = '#009c3b';
-  const STATUS_COLORS = {
-    good: '#0ca30c', warning: '#d98c00', serious: '#d1662f',
-    critical: '#d03b3b', neutral: '#898781',
-  };
+  const STATUS_COLORS = { good: '#0ca30c', warning: '#d98c00', serious: '#d1662f', critical: '#d03b3b', neutral: '#898781' };
+  const DOW_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const PERFIL_CATEGORY = 'Perfil demográfico';
+  const TZ_OFFSET_MS = 3 * 60 * 60 * 1000; // America/Sao_Paulo = UTC-3, sem horário de verão
 
   Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
-  // ---- Timeline (line + area) ----
-  const timelineLabels = JSON.parse(document.getElementById('timeline-labels').textContent);
-  const timelineValues = JSON.parse(document.getElementById('timeline-values').textContent);
-  new Chart(document.getElementById('timelineChart'), {
-    type: 'line',
-    data: {
-      labels: timelineLabels,
-      datasets: [{
-        label: 'Respostas',
-        data: timelineValues,
-        borderColor: '#2a78d6',
-        backgroundColor: 'rgba(42, 120, 214, 0.10)',
-        borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: '#2a78d6',
-        pointHoverBorderColor: SURFACE,
-        pointHoverBorderWidth: 2,
-        tension: 0.3,
-        fill: true,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#14171a', padding: 10, cornerRadius: 8,
-          titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
-          callbacks: { label: (ctx) => ` ${ctx.parsed.y} resposta${ctx.parsed.y === 1 ? '' : 's'}` },
-        },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: INK_MUTED, font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
-        y: { beginAtZero: true, ticks: { precision: 0, color: INK_MUTED, font: { size: 11 } }, grid: { color: GRID } },
-      }
-    }
+  const QUESTIONS = JSON.parse(document.getElementById('export-questions').textContent);
+  const RAW_RESPONSES = JSON.parse(document.getElementById('export-responses').textContent);
+  const RAW_ANSWERS = JSON.parse(document.getElementById('export-answers').textContent);
+
+  const questionsById = new Map(QUESTIONS.map((q) => [q.id, q]));
+  const regiaoQuestion = QUESTIONS.find((q) => q.label && q.label.toLowerCase().includes('regi'));
+
+  function brazilParts(isoString) {
+    const shifted = new Date(new Date(isoString).getTime() - TZ_OFFSET_MS);
+    const y = shifted.getUTCFullYear(), m = shifted.getUTCMonth(), d = shifted.getUTCDate();
+    const hh = String(shifted.getUTCHours()).padStart(2, '0');
+    const mm = String(shifted.getUTCMinutes()).padStart(2, '0');
+    return {
+      dateKey: y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0'),
+      dmLabel: String(d).padStart(2, '0') + '/' + String(m + 1).padStart(2, '0'),
+      dmyHm: String(d).padStart(2, '0') + '/' + String(m + 1).padStart(2, '0') + '/' + y + ' ' + hh + ':' + mm,
+      dow: shifted.getUTCDay(),
+    };
+  }
+
+  const RESPONSES = RAW_RESPONSES.map((r) => ({ ...r, parts: brazilParts(r.created_at) }));
+  const answersByResponse = new Map();
+  RAW_ANSWERS.forEach(([rid, qid, value]) => {
+    if (!answersByResponse.has(rid)) answersByResponse.set(rid, new Map());
+    answersByResponse.get(rid).set(qid, value);
   });
 
-  // ---- Ranking bars + status (avaliação) bars ----
-  const specs = JSON.parse(document.getElementById('chart-specs-data').textContent);
-  const activeFilters = JSON.parse(document.getElementById('active-filters-data').textContent);
+  const round1 = (n) => Math.round(n * 10) / 10;
 
-  function selectedValueFor(questionId) {
-    const hit = activeFilters.find((f) => f.token.indexOf(questionId + ':') === 0);
-    return hit ? hit.value : null;
+  // ---- Estado dos filtros (fonte da verdade: array de {questionId, value}) ----
+  let filters = [];
+
+  function parseFiltersFromUrl() {
+    // URLSearchParams ja devolve os valores decodificados
+    const params = new URLSearchParams(window.location.search);
+    return params.getAll('f').map((token) => {
+      const idx = token.indexOf(':');
+      return { questionId: parseInt(token.slice(0, idx), 10), value: token.slice(idx + 1) };
+    }).filter((f) => !isNaN(f.questionId) && f.value);
+  }
+  filters = parseFiltersFromUrl();
+
+  function syncUrl() {
+    // URLSearchParams cuida do encoding ao montar a query string — nao codificar de novo aqui
+    const params = new URLSearchParams(window.location.search);
+    params.delete('f');
+    filters.forEach((f) => params.append('f', f.questionId + ':' + f.value));
+    const qs = params.toString();
+    const url = window.location.pathname + (qs ? '?' + qs : '');
+    window.history.replaceState({}, '', url);
+  }
+
+  function isActive(questionId, value) {
+    return filters.some((f) => f.questionId === questionId && f.value === value);
+  }
+
+  function toggleFilter(questionId, value) {
+    const idx = filters.findIndex((f) => f.questionId === questionId && f.value === value);
+    if (idx >= 0) { filters.splice(idx, 1); } else { filters.push({ questionId, value }); }
+    syncUrl();
+    renderAll();
+  }
+
+  function clearFilters() {
+    filters = [];
+    syncUrl();
+    renderAll();
+  }
+
+  // ---- Motor de agregação: recalcula tudo a partir do estado de filtros ----
+  function matchesFilters(response) {
+    const ans = answersByResponse.get(response.id);
+    return filters.every((f) => {
+      const v = ans && ans.get(f.questionId);
+      if (v === undefined) return false;
+      const q = questionsById.get(f.questionId);
+      if (q && q.type === 'checkbox_multi') {
+        return v.split(', ').map((s) => s.trim()).includes(f.value);
+      }
+      return v === f.value;
+    });
+  }
+
+  function compute() {
+    const filtered = RESPONSES.filter(matchesFilters);
+    const total = filtered.length;
+
+    const nowKey = brazilParts(new Date().toISOString()).dateKey;
+    const hoje = filtered.filter((r) => r.parts.dateKey === nowKey).length;
+    const sevenDaysAgo = Date.now() - 7 * 24 * 3600 * 1000;
+    const ultimos7 = filtered.filter((r) => new Date(r.created_at).getTime() >= sevenDaysAgo).length;
+    const ultima = filtered.length ? filtered[filtered.length - 1] : null;
+
+    const dayMap = new Map();
+    const dowCounts = new Array(7).fill(0);
+    filtered.forEach((r) => {
+      dayMap.set(r.parts.dateKey, (dayMap.get(r.parts.dateKey) || 0) + 1);
+      dowCounts[r.parts.dow] += 1;
+    });
+    const dayKeys = [...dayMap.keys()].sort();
+    const timeline = {
+      labels: dayKeys.map((k) => { const parts = k.split('-'); return parts[2] + '/' + parts[1]; }),
+      values: dayKeys.map((k) => dayMap.get(k)),
+    };
+
+    const rankingsByCategory = new Map();
+    const statusSections = [];
+    QUESTIONS.forEach((q) => {
+      const counter = new Map();
+      filtered.forEach((r) => {
+        const ans = answersByResponse.get(r.id);
+        const v = ans && ans.get(q.id);
+        if (!v) return;
+        if (q.type === 'checkbox_multi') {
+          v.split(',').forEach((item) => { item = item.trim(); if (item) counter.set(item, (counter.get(item) || 0) + 1); });
+        } else {
+          counter.set(v, (counter.get(v) || 0) + 1);
+        }
+      });
+      if (!counter.size) return;
+
+      const statusByValue = new Map(q.options.filter((o) => o.status).map((o) => [o.value, o.status]));
+      const isStatus = statusByValue.size > 0 && [...counter.keys()].every((v) => statusByValue.has(v));
+
+      if (isStatus) {
+        const items = q.options.filter((o) => counter.has(o.value)).map((o) => ({
+          label: o.label, value: o.value, total: counter.get(o.value),
+          pct: total ? round1(counter.get(o.value) / total * 100) : 0, status: o.status || 'neutral',
+        }));
+        if (items.length) statusSections.push({ questionId: q.id, label: q.label, items });
+      } else {
+        const items = [...counter.entries()].sort((a, b) => b[1] - a[1]).map(([label, qty]) => ({
+          label, value: label, total: qty, pct: total ? round1(qty / total * 100) : 0,
+        }));
+        const cat = q.category;
+        if (!rankingsByCategory.has(cat)) rankingsByCategory.set(cat, []);
+        rankingsByCategory.get(cat).push({ questionId: q.id, label: q.label, items });
+      }
+    });
+
+    let categoryNames = [...rankingsByCategory.keys()];
+    categoryNames = categoryNames.filter((c) => c !== PERFIL_CATEGORY).concat(categoryNames.includes(PERFIL_CATEGORY) ? [PERFIL_CATEGORY] : []);
+    const rankingCategories = categoryNames.map((name) => ({ name, charts: rankingsByCategory.get(name) }));
+
+    const recent = filtered.slice(-8).reverse().map((r) => {
+      const ans = answersByResponse.get(r.id);
+      return {
+        nome: r.nome, whatsapp: r.whatsapp,
+        regiao: regiaoQuestion && ans ? (ans.get(regiaoQuestion.id) || '') : '',
+        dmyHm: r.parts.dmyHm,
+      };
+    });
+
+    return { total, hoje, ultimos7, ultima, timeline, dowCounts, statusSections, rankingCategories, recent };
+  }
+
+  // ---- Render ----
+  let chartInstances = [];
+  function destroyCharts() { chartInstances.forEach((c) => c.destroy()); chartInstances = []; }
+
+  function animateValue(el, target) {
+    const start = parseInt(el.getAttribute('data-count') || '0', 10);
+    el.setAttribute('data-count', target);
+    const duration = 400;
+    const t0 = performance.now();
+    function tick(now) {
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(start + (target - start) * eased).toLocaleString('pt-BR');
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function renderFilterBar() {
+    const bar = document.getElementById('filterBar');
+    if (!filters.length) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
+    bar.style.display = 'flex';
+    let html = '<span class="filter-bar-label"><i class="fas fa-filter"></i> Filtrando por</span>';
+    filters.forEach((f) => {
+      const q = questionsById.get(f.questionId);
+      const label = q ? q.label : '?';
+      html += `<span class="filter-chip">
+        <span class="chip-q">${escapeHtml(label)}:</span> ${escapeHtml(f.value)}
+        <button type="button" data-qid="${f.questionId}" data-val="${escapeAttr(f.value)}" aria-label="Remover filtro">✕</button>
+      </span>`;
+    });
+    html += '<span class="filter-clear pressable" id="filterClearBtn">Limpar tudo</span>';
+    bar.innerHTML = html;
+    bar.querySelectorAll('button[data-qid]').forEach((btn) => {
+      btn.addEventListener('click', () => toggleFilter(parseInt(btn.dataset.qid, 10), btn.dataset.val));
+    });
+    document.getElementById('filterClearBtn').addEventListener('click', clearFilters);
+  }
+
+  function escapeHtml(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+  function escapeAttr(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function sizeForBars(canvas, count) {
-    const wrap = canvas.parentElement;
-    wrap.style.height = Math.max(140, count * 38 + 24) + 'px';
+    canvas.parentElement.style.height = Math.max(140, count * 38 + 24) + 'px';
   }
 
-  function renderBarChart(spec) {
-    const canvas = document.getElementById(spec.id);
-    if (!canvas) return;
+  function buildBarChart(canvas, spec) {
     sizeForBars(canvas, spec.items.length);
     const maxValue = Math.max(...spec.items.map((i) => i.total), 1);
-    const selected = selectedValueFor(spec.question_id);
-    const colors = spec.items.map((i) => {
-      if (!selected) return BRAND_GREEN;
-      return i.label === selected ? BRAND_GREEN : 'rgba(0, 156, 59, 0.25)';
-    });
-    new Chart(canvas, {
+    const colors = spec.items.map((i) => (isActive(spec.questionId, i.value) ? BRAND_GREEN : (filters.some((f) => f.questionId === spec.questionId) ? 'rgba(0,156,59,0.25)' : BRAND_GREEN)));
+    const chart = new Chart(canvas, {
       type: 'bar',
-      data: {
-        labels: spec.items.map((i) => i.label),
-        datasets: [{
-          data: spec.items.map((i) => i.total),
-          backgroundColor: colors,
-          borderRadius: 4,
-          maxBarThickness: 22,
-          categoryPercentage: 0.75,
-          barPercentage: 0.9,
-        }],
-      },
+      data: { labels: spec.items.map((i) => i.label), datasets: [{ data: spec.items.map((i) => i.total), backgroundColor: colors, borderRadius: 4, maxBarThickness: 22, categoryPercentage: 0.75, barPercentage: 0.9 }] },
       options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { right: 8 } },
-        onClick: (evt, elements) => {
-          if (!elements.length) return;
-          toggleFilter(spec.question_id, spec.items[elements[0].index].label);
-        },
-        onHover: (evt, elements) => {
-          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        },
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 8 } },
+        onClick: (evt, els) => { if (els.length) toggleFilter(spec.questionId, spec.items[els[0].index].value); },
+        onHover: (evt, els) => { evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#14171a', padding: 10, cornerRadius: 8,
-            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+            backgroundColor: '#14171a', padding: 10, cornerRadius: 8, titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
             callbacks: {
               title: (items) => spec.items[items[0].dataIndex].label,
-              label: (ctx) => {
-                const item = spec.items[ctx.dataIndex];
-                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%) · clique pra filtrar`;
-              },
+              label: (ctx) => { const it = spec.items[ctx.dataIndex]; return ` ${it.total} resposta${it.total === 1 ? '' : 's'} (${it.pct}%) · clique pra filtrar`; },
             },
           },
           datalabels: {
-            anchor: 'end', align: 'end', clamp: true,
-            color: INK_SECONDARY, font: { size: 11, weight: '600' },
-            formatter: (value, ctx) => {
-              const item = spec.items[ctx.dataIndex];
-              return `${item.total} (${item.pct}%)`;
-            },
+            anchor: 'end', align: 'end', clamp: true, color: INK_SECONDARY, font: { size: 11, weight: '600' },
+            formatter: (v, ctx) => { const it = spec.items[ctx.dataIndex]; return `${it.total} (${it.pct}%)`; },
           },
         },
         scales: {
@@ -501,77 +572,236 @@
       },
       plugins: [ChartDataLabels],
     });
+    chartInstances.push(chart);
   }
 
-  function renderStatusChart(spec) {
-    const canvas = document.getElementById(spec.id);
-    if (!canvas) return;
+  function buildStatusChart(canvas, spec) {
     canvas.parentElement.style.height = '54px';
-    const selected = selectedValueFor(spec.question_id);
-    new Chart(canvas, {
+    const chart = new Chart(canvas, {
       type: 'bar',
       data: {
         labels: [''],
         datasets: spec.items.map((item) => {
           const base = STATUS_COLORS[item.status] || STATUS_COLORS.neutral;
-          const dimmed = selected && item.label !== selected;
-          return {
-            label: item.label,
-            data: [item.pct],
-            backgroundColor: dimmed ? base + '55' : base,
-            borderRadius: 3,
-            maxBarThickness: 40,
-          };
+          const dimmed = filters.some((f) => f.questionId === spec.questionId) && !isActive(spec.questionId, item.value);
+          return { label: item.label, data: [item.pct], backgroundColor: dimmed ? base + '55' : base, borderRadius: 3, maxBarThickness: 40 };
         }),
       },
       options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        onClick: (evt, elements) => {
-          if (!elements.length) return;
-          toggleFilter(spec.question_id, spec.items[elements[0].datasetIndex].label);
-        },
-        onHover: (evt, elements) => {
-          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        },
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        onClick: (evt, els) => { if (els.length) toggleFilter(spec.questionId, spec.items[els[0].datasetIndex].value); },
+        onHover: (evt, els) => { evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
         plugins: {
-          legend: {
-            position: 'bottom', align: 'start',
-            labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 9, boxHeight: 9, padding: 14, font: { size: 11.5 }, color: INK_SECONDARY },
-          },
+          legend: { position: 'bottom', align: 'start', labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 9, boxHeight: 9, padding: 14, font: { size: 11.5 }, color: INK_SECONDARY } },
           tooltip: {
-            backgroundColor: '#14171a', padding: 10, cornerRadius: 8,
-            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+            backgroundColor: '#14171a', padding: 10, cornerRadius: 8, titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
             callbacks: {
               title: (items) => spec.items[items[0].datasetIndex].label,
-              label: (ctx) => {
-                const item = spec.items[ctx.datasetIndex];
-                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%) · clique pra filtrar`;
-              },
+              label: (ctx) => { const it = spec.items[ctx.datasetIndex]; return ` ${it.total} resposta${it.total === 1 ? '' : 's'} (${it.pct}%) · clique pra filtrar`; },
             },
           },
-          datalabels: {
-            color: '#fff', font: { size: 11, weight: '700' },
-            formatter: (value) => (value >= 7 ? `${value}%` : ''),
-          },
+          datalabels: { color: '#fff', font: { size: 11, weight: '700' }, formatter: (v) => (v >= 7 ? `${v}%` : '') },
+        },
+        scales: { x: { stacked: true, max: 100, display: false }, y: { stacked: true, display: false } },
+      },
+      plugins: [ChartDataLabels],
+    });
+    chartInstances.push(chart);
+  }
+
+  function renderStatusSections(sections) {
+    const wrap = document.getElementById('statusSectionsWrap');
+    if (!sections.length) { wrap.innerHTML = ''; return; }
+    let html = '<div class="section-title"><i class="fas fa-gauge-high"></i>Avaliação</div><div class="status-grid">';
+    sections.forEach((s, i) => {
+      html += `<div class="status-card surface surface-hover">
+        <h3>${escapeHtml(s.label)}</h3>
+        <p class="chart-meta"><span>Distribuição das respostas, ruim → bom</span><span class="clickable-hint"><i class="fas fa-hand-pointer"></i> clique pra filtrar</span></p>
+        <div class="status-canvas-wrap"><canvas id="statusChart${i}"></canvas></div>
+      </div>`;
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+    sections.forEach((s, i) => buildStatusChart(document.getElementById('statusChart' + i), s));
+  }
+
+  function renderRankingCategories(categories) {
+    const wrap = document.getElementById('rankingCategoriesWrap');
+    if (!categories.length) { wrap.innerHTML = ''; return; }
+    let html = '';
+    categories.forEach((cat, ci) => {
+      html += `<div class="section-title"><i class="fas fa-chart-simple"></i>${escapeHtml(cat.name)}</div><div class="chart-grid">`;
+      cat.charts.forEach((chart, i) => {
+        const id = `rankChart${ci}_${i}`;
+        html += `<div class="chart-card surface surface-hover">
+          <h3>${escapeHtml(chart.label)}</h3>
+          <p class="chart-meta"><span>${chart.items.length} opç${chart.items.length === 1 ? 'ão' : 'ões'}</span><span class="clickable-hint"><i class="fas fa-hand-pointer"></i> clique pra filtrar</span></p>
+          <div class="chart-canvas-wrap"><canvas id="${id}"></canvas></div>
+        </div>`;
+      });
+      html += '</div>';
+    });
+    wrap.innerHTML = html;
+    categories.forEach((cat, ci) => {
+      cat.charts.forEach((chart, i) => buildBarChart(document.getElementById(`rankChart${ci}_${i}`), chart));
+    });
+  }
+
+  function renderRecentTable(recent) {
+    const body = document.getElementById('recentTableBody');
+    const emptyNote = document.getElementById('recentEmptyNote');
+    if (!recent.length) { body.innerHTML = ''; emptyNote.style.display = 'block'; return; }
+    emptyNote.style.display = 'none';
+    body.innerHTML = recent.map((p) => `
+      <tr>
+        <td class="name">${escapeHtml(p.nome)}</td>
+        <td>${escapeHtml(p.whatsapp || '--')}</td>
+        <td>${escapeHtml(p.regiao || '--')}</td>
+        <td class="time">${p.dmyHm}</td>
+      </tr>
+    `).join('');
+  }
+
+  function buildTimelineChart(timeline) {
+    const canvas = document.getElementById('timelineChart');
+    const chart = new Chart(canvas, {
+      type: 'line',
+      data: { labels: timeline.labels, datasets: [{ label: 'Respostas', data: timeline.values, borderColor: '#2a78d6', backgroundColor: 'rgba(42, 120, 214, 0.10)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#2a78d6', pointHoverBorderColor: SURFACE, pointHoverBorderWidth: 2, tension: 0.3, fill: true }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#14171a', padding: 10, cornerRadius: 8, titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 }, callbacks: { label: (ctx) => ` ${ctx.parsed.y} resposta${ctx.parsed.y === 1 ? '' : 's'}` } },
         },
         scales: {
-          x: { stacked: true, max: 100, display: false },
-          y: { stacked: true, display: false },
+          x: { grid: { display: false }, ticks: { color: INK_MUTED, font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } },
+          y: { beginAtZero: true, ticks: { precision: 0, color: INK_MUTED, font: { size: 11 } }, grid: { color: GRID } },
+        },
+      },
+    });
+    chartInstances.push(chart);
+  }
+
+  function buildDowChart(dowCounts) {
+    const canvas = document.getElementById('dowChart');
+    const maxValue = Math.max(...dowCounts, 1);
+    const chart = new Chart(canvas, {
+      type: 'bar',
+      data: { labels: DOW_LABELS, datasets: [{ data: dowCounts, backgroundColor: '#2a78d6', borderRadius: 4, maxBarThickness: 34 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#14171a', padding: 10, cornerRadius: 8, callbacks: { label: (ctx) => ` ${ctx.parsed.y} resposta${ctx.parsed.y === 1 ? '' : 's'}` } },
+          datalabels: { anchor: 'end', align: 'end', color: INK_SECONDARY, font: { size: 11, weight: '600' }, formatter: (v) => (v ? v : '') },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: INK_MUTED, font: { size: 11 } } },
+          y: { beginAtZero: true, suggestedMax: maxValue * 1.2, display: false, grid: { display: false } },
         },
       },
       plugins: [ChartDataLabels],
     });
+    chartInstances.push(chart);
   }
 
-  specs.forEach((spec) => {
-    if (spec.kind === 'status') {
-      renderStatusChart(spec);
+  function renderKpis(agg) {
+    document.getElementById('topbarCount').textContent = agg.total.toLocaleString('pt-BR');
+    animateValue(document.getElementById('kpiTotal'), agg.total);
+    animateValue(document.getElementById('kpiHoje'), agg.hoje);
+    animateValue(document.getElementById('kpi7d'), agg.ultimos7);
+    const kpiUltimaEl = document.getElementById('kpiUltima');
+    if (agg.ultima) {
+      const [datePart, timePart] = agg.ultima.parts.dmyHm.split(' ');
+      kpiUltimaEl.innerHTML = `${datePart} <small>${timePart}</small>`;
     } else {
-      renderBarChart(spec);
+      kpiUltimaEl.textContent = '--';
     }
-  });
+  }
+
+  // ---- Painel de filtros (gaveta) ----
+  function buildDrawerBody() {
+    const byCategory = new Map();
+    const order = [];
+    QUESTIONS.forEach((q) => {
+      if (!q.options.length) return;
+      const cat = q.category;
+      if (!byCategory.has(cat)) { byCategory.set(cat, []); order.push(cat); }
+      byCategory.get(cat).push(q);
+    });
+    let names = order.filter((c) => c !== PERFIL_CATEGORY).concat(order.includes(PERFIL_CATEGORY) ? [PERFIL_CATEGORY] : []);
+
+    const globalCounts = new Map();
+    QUESTIONS.forEach((q) => {
+      const counter = new Map();
+      RESPONSES.forEach((r) => {
+        const ans = answersByResponse.get(r.id);
+        const v = ans && ans.get(q.id);
+        if (!v) return;
+        if (q.type === 'checkbox_multi') { v.split(',').forEach((it) => { it = it.trim(); if (it) counter.set(it, (counter.get(it) || 0) + 1); }); }
+        else { counter.set(v, (counter.get(v) || 0) + 1); }
+      });
+      globalCounts.set(q.id, counter);
+    });
+
+    let html = '';
+    names.forEach((cat) => {
+      html += `<div class="drawer-group"><div class="drawer-cat">${escapeHtml(cat)}</div>`;
+      byCategory.get(cat).forEach((q) => {
+        const counter = globalCounts.get(q.id) || new Map();
+        const opts = q.options.filter((o) => counter.has(o.value)).sort((a, b) => (counter.get(b.value) || 0) - (counter.get(a.value) || 0));
+        if (!opts.length) return;
+        html += `<div class="drawer-question"><div class="drawer-question-label">${escapeHtml(q.label)}</div><div class="drawer-options">`;
+        opts.forEach((o) => {
+          html += `<span class="drawer-opt pressable" data-qid="${q.id}" data-val="${escapeAttr(o.value)}">${escapeHtml(o.label)} <span class="n">${counter.get(o.value)}</span></span>`;
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+    });
+    document.getElementById('drawerBody').innerHTML = html;
+    document.querySelectorAll('.drawer-opt').forEach((el) => {
+      el.addEventListener('click', () => toggleFilter(parseInt(el.dataset.qid, 10), el.dataset.val));
+    });
+  }
+
+  function renderDrawerState(agg) {
+    document.querySelectorAll('.drawer-opt').forEach((el) => {
+      const active = isActive(parseInt(el.dataset.qid, 10), el.dataset.val);
+      el.classList.toggle('active', active);
+    });
+    document.getElementById('drawerCount').textContent = agg.total.toLocaleString('pt-BR');
+    const badge = document.getElementById('fabBadge');
+    badge.textContent = filters.length;
+    badge.classList.toggle('show', filters.length > 0);
+  }
+
+  function renderAll() {
+    const agg = compute();
+    destroyCharts();
+    renderFilterBar();
+    renderKpis(agg);
+    buildTimelineChart(agg.timeline);
+    buildDowChart(agg.dowCounts);
+    renderStatusSections(agg.statusSections);
+    renderRankingCategories(agg.rankingCategories);
+    renderRecentTable(agg.recent);
+    renderDrawerState(agg);
+  }
+
+  // ---- Gaveta de filtros: abrir/fechar ----
+  const drawer = document.getElementById('drawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  function openDrawer() { drawer.classList.add('open'); backdrop.classList.add('open'); }
+  function closeDrawer() { drawer.classList.remove('open'); backdrop.classList.remove('open'); }
+  document.getElementById('fabButton').addEventListener('click', openDrawer);
+  document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+  document.getElementById('drawerClear').addEventListener('click', clearFilters);
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
+  buildDrawerBody();
+  renderAll();
 })();
 </script>
 
