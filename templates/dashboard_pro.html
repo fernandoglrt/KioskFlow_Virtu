@@ -268,7 +268,7 @@
     <div class="kpi-tile kpi-tile-warn surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-clone"></i></div>
       <p class="kpi-label">Duplicatas filtradas</p>
-      <p class="kpi-value" data-count="{{ total_duplicatas }}">0</p>
+      <p class="kpi-value" id="kpiDuplicatas" data-count="{{ total_duplicatas }}">0</p>
     </div>
   </div>
 
@@ -802,6 +802,10 @@
 
   buildDrawerBody();
   renderAll();
+  const dupEl = document.getElementById('kpiDuplicatas');
+  const dupTarget = parseInt(dupEl.getAttribute('data-count'), 10) || 0;
+  dupEl.setAttribute('data-count', '0');
+  animateValue(dupEl, dupTarget);
 })();
 </script>
 
