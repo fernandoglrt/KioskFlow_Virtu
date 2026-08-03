@@ -135,7 +135,8 @@
   .section-title:first-of-type { margin-top: 0; }
 
   /* Seletor de cargo (streamgraph) */
-  .cargo-selector { margin-left: auto; display: flex; gap: 4px; text-transform: none; letter-spacing: normal; }
+  .header-controls { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; text-transform: none; letter-spacing: normal; }
+  .cargo-selector, .granularity-selector { display: flex; gap: 4px; }
   .cargo-opt {
     font-size: .78rem; font-weight: 600; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line);
     background: var(--surface); color: var(--ink-muted); cursor: pointer;
@@ -295,7 +296,13 @@
     </div>
   </div>
 
-  <div class="section-title"><i class="fas fa-water"></i>Evolução dos candidatos<span class="cargo-selector" id="cargoSelector"></span></div>
+  <div class="section-title">
+    <i class="fas fa-water"></i>Evolução dos candidatos
+    <span class="header-controls">
+      <span class="granularity-selector" id="granularitySelector"></span>
+      <span class="cargo-selector" id="cargoSelector"></span>
+    </span>
+  </div>
   <div class="panel surface">
     <div class="chart-wrap" style="height: 340px;">
       <canvas id="streamChart"></canvas>
@@ -361,6 +368,8 @@
     { key: 'candidato_governador', label: 'Governador' },
   ];
   let selectedCargoKey = 'candidato_voto_hoje';
+  const GRANULARITY_DEFS = [{ key: 'day', label: 'Dia' }, { key: 'month', label: 'Mês' }];
+  let selectedGranularity = 'month';
 
   Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
@@ -384,13 +393,17 @@
     };
   }
 
-  // Segunda-feira da semana que contém dateKey ("YYYY-MM-DD") — usado pra agrupar o streamgraph
-  function weekKey(dateKey) {
-    const [y, m, d] = dateKey.split('-').map(Number);
-    const dt = new Date(Date.UTC(y, m - 1, d));
-    const diffToMonday = (dt.getUTCDay() + 6) % 7;
-    dt.setUTCDate(dt.getUTCDate() - diffToMonday);
-    return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0') + '-' + String(dt.getUTCDate()).padStart(2, '0');
+  const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  // Agrupa dateKey ("YYYY-MM-DD") por dia ou por mês, pro streamgraph
+  function bucketKeyFor(dateKey, granularity) {
+    if (granularity === 'day') return dateKey;
+    return dateKey.slice(0, 7); // "YYYY-MM"
+  }
+  function bucketLabelFor(key, granularity) {
+    if (granularity === 'day') { const p = key.split('-'); return p[2] + '/' + p[1]; }
+    const [y, m] = key.split('-');
+    return MONTH_LABELS[parseInt(m, 10) - 1] + '/' + y.slice(2);
   }
 
   const RESPONSES = RAW_RESPONSES.map((r) => ({ ...r, parts: brazilParts(r.created_at) }));
@@ -758,26 +771,26 @@
     if (!q) return null;
     const filtered = RESPONSES.filter(matchesFilters);
 
-    const weekBuckets = new Map();
+    const buckets = new Map();
     filtered.forEach((r) => {
       const ans = answersByResponse.get(r.id);
       const v = ans && ans.get(q.id);
       if (!v) return;
-      const wk = weekKey(r.parts.dateKey);
-      if (!weekBuckets.has(wk)) weekBuckets.set(wk, new Map());
-      const bucket = weekBuckets.get(wk);
+      const bk = bucketKeyFor(r.parts.dateKey, selectedGranularity);
+      if (!buckets.has(bk)) buckets.set(bk, new Map());
+      const bucket = buckets.get(bk);
       bucket.set(v, (bucket.get(v) || 0) + 1);
     });
-    const weekKeys = [...weekBuckets.keys()].sort();
-    if (!weekKeys.length) return { labels: [], datasets: [] };
+    const bucketKeys = [...buckets.keys()].sort();
+    if (!bucketKeys.length) return { labels: [], datasets: [] };
 
     const datasets = q.options.map((o, idx) => ({
       label: o.label,
       color: CATEGORICAL_PALETTE[idx % CATEGORICAL_PALETTE.length],
-      data: weekKeys.map((wk) => weekBuckets.get(wk).get(o.value) || 0),
+      data: bucketKeys.map((bk) => buckets.get(bk).get(o.value) || 0),
     })).filter((ds) => ds.data.some((v) => v > 0));
 
-    const labels = weekKeys.map((wk) => { const p = wk.split('-'); return p[2] + '/' + p[1]; });
+    const labels = bucketKeys.map((bk) => bucketLabelFor(bk, selectedGranularity));
     return { labels, datasets };
   }
 
@@ -847,6 +860,18 @@
       btn.addEventListener('click', () => {
         selectedCargoKey = btn.dataset.key;
         el.querySelectorAll('.cargo-opt').forEach((b) => b.classList.toggle('active', b.dataset.key === selectedCargoKey));
+        buildStreamChart();
+      });
+    });
+  }
+
+  function buildGranularitySelector() {
+    const el = document.getElementById('granularitySelector');
+    el.innerHTML = GRANULARITY_DEFS.map((g) => `<span class="cargo-opt pressable${g.key === selectedGranularity ? ' active' : ''}" data-gran="${g.key}">${escapeHtml(g.label)}</span>`).join('');
+    el.querySelectorAll('.cargo-opt').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedGranularity = btn.dataset.gran;
+        el.querySelectorAll('.cargo-opt').forEach((b) => b.classList.toggle('active', b.dataset.gran === selectedGranularity));
         buildStreamChart();
       });
     });
@@ -949,6 +974,7 @@
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
 
   buildCargoSelector();
+  buildGranularitySelector();
   buildDrawerBody();
   renderAll();
   const dupEl = document.getElementById('kpiDuplicatas');
