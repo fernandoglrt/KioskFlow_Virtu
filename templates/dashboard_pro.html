@@ -390,17 +390,25 @@
     return filters.some((f) => f.questionId === questionId && f.value === value);
   }
 
+  // Reconstruir os gráficos muda a altura da página (menos/mais barras) — sem isso
+  // o scroll "pula" porque o conteúdo acima se redimensiona debaixo do viewport.
+  function renderAllKeepingScroll() {
+    const scrollY = window.scrollY;
+    renderAll();
+    window.scrollTo(0, scrollY);
+  }
+
   function toggleFilter(questionId, value) {
     const idx = filters.findIndex((f) => f.questionId === questionId && f.value === value);
     if (idx >= 0) { filters.splice(idx, 1); } else { filters.push({ questionId, value }); }
     syncUrl();
-    renderAll();
+    renderAllKeepingScroll();
   }
 
   function clearFilters() {
     filters = [];
     syncUrl();
-    renderAll();
+    renderAllKeepingScroll();
   }
 
   // ---- Motor de agregação: recalcula tudo a partir do estado de filtros ----
