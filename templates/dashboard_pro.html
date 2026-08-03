@@ -62,13 +62,13 @@
   .pressable { transition: transform .12s ease, box-shadow .12s ease, background .15s ease; }
   .pressable:active { transform: translateY(1px) scale(0.98); }
 
+  .sticky-header { position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+
   .topbar {
     background: linear-gradient(135deg, var(--brand-green-dark), var(--brand-green));
     color: #fff;
     padding: 26px clamp(20px, 4vw, 48px);
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
-    position: sticky; top: 0; z-index: 20;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   }
   .topbar-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; display: flex; align-items: center; }
   .topbar-sub { opacity: .85; font-size: .88rem; margin-top: 3px; }
@@ -85,13 +85,13 @@
 
   .wrap { max-width: 1400px; margin: 0 auto; padding: clamp(16px, 3vw, 32px); }
 
-  /* Barra de filtros ativos */
+  /* Barra de filtros ativos — "flutua" grudada embaixo do header, sempre visível */
   .filter-bar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-    margin-bottom: 22px; padding: 12px 14px;
-    background: linear-gradient(180deg, #ffffff, #fbfdfb);
-    border: 1px solid var(--line); border-radius: 12px;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 6px 16px rgba(20,23,26,0.05);
+    padding: 12px clamp(20px, 4vw, 48px);
+    background: linear-gradient(180deg, #fbfdfb, #f4f7f5);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 6px 16px rgba(20,23,26,0.06);
   }
   .filter-bar-label { font-size: .76rem; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
   .filter-chip {
@@ -133,6 +133,17 @@
   }
   .section-title i { color: var(--brand-green); font-size: .95rem; }
   .section-title:first-of-type { margin-top: 0; }
+
+  /* Seletor de cargo (streamgraph) */
+  .cargo-selector { margin-left: auto; display: flex; gap: 4px; text-transform: none; letter-spacing: normal; }
+  .cargo-opt {
+    font-size: .78rem; font-weight: 600; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-muted); cursor: pointer;
+  }
+  .cargo-opt.active {
+    background: linear-gradient(180deg, var(--brand-green), var(--brand-green-dark)); color: #fff; border-color: var(--brand-green-dark);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 3px 8px rgba(0,106,40,0.25);
+  }
 
   .panel { padding: 22px; }
   .split-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
@@ -224,7 +235,8 @@
   .drawer-footer .count strong { color: var(--ink); }
 
   @media (max-width: 640px) {
-    .topbar { padding: 20px 18px; position: static; }
+    .sticky-header { position: static; }
+    .topbar { padding: 20px 18px; }
     .topbar-title { font-size: 1.25rem; }
     .fab span.fab-label { display: none; }
   }
@@ -232,17 +244,18 @@
 </head>
 <body>
 
-<div class="topbar">
-  <div>
-    <p class="topbar-title"><span class="live-dot"></span>Painel de Resultados</p>
-    <p class="topbar-sub"><span id="topbarCount">{{ export_responses|length }}</span> respostas monitoradas em tempo real</p>
+<div class="sticky-header">
+  <div class="topbar">
+    <div>
+      <p class="topbar-title"><span class="live-dot"></span>Painel de Resultados</p>
+      <p class="topbar-sub"><span id="topbarCount">{{ export_responses|length }}</span> respostas monitoradas em tempo real</p>
+    </div>
+    <a class="topbar-back" href="/admin/"><i class="fas fa-arrow-left"></i> Voltar ao admin</a>
   </div>
-  <a class="topbar-back" href="/admin/"><i class="fas fa-arrow-left"></i> Voltar ao admin</a>
+  <div id="filterBar" class="filter-bar" style="display:none;"></div>
 </div>
 
 <div class="wrap">
-
-  <div id="filterBar" class="filter-bar" style="display:none;"></div>
 
   <div class="kpi-grid">
     <div class="kpi-tile surface surface-hover">
@@ -279,6 +292,14 @@
     </div>
     <div class="panel surface">
       <div class="chart-wrap"><canvas id="dowChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title"><i class="fas fa-water"></i>Evolução dos candidatos<span class="cargo-selector" id="cargoSelector"></span></div>
+  <div class="panel surface">
+    <div class="chart-wrap" style="height: 340px;">
+      <canvas id="streamChart"></canvas>
+      <p class="empty-note" id="streamEmptyNote" style="display:none; text-align:center; padding-top:130px;">Sem dados suficientes pra esse cargo com os filtros atuais.</p>
     </div>
   </div>
 
@@ -331,6 +352,15 @@
   const DOW_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const PERFIL_CATEGORY = 'Perfil demográfico';
   const TZ_OFFSET_MS = 3 * 60 * 60 * 1000; // America/Sao_Paulo = UTC-3, sem horário de verão
+  // Paleta categórica validada (8 matizes, ordem fixa — ver skill de dataviz)
+  const CATEGORICAL_PALETTE = ['#2a78d6', '#008300', '#e87ba4', '#eda100', '#1baf7a', '#eb6834', '#4a3aa7', '#e34948'];
+  const CARGO_DEFS = [
+    { key: 'candidato_voto_hoje', label: 'Deputado' },
+    { key: 'voto_presidente', label: 'Presidente' },
+    { key: 'voto_senador', label: 'Senado' },
+    { key: 'candidato_governador', label: 'Governador' },
+  ];
+  let selectedCargoKey = 'candidato_voto_hoje';
 
   Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
@@ -339,7 +369,7 @@
   const RAW_ANSWERS = JSON.parse(document.getElementById('export-answers').textContent);
 
   const questionsById = new Map(QUESTIONS.map((q) => [q.id, q]));
-  const regiaoQuestion = QUESTIONS.find((q) => q.label && q.label.toLowerCase().includes('regi'));
+  const regiaoQuestion = QUESTIONS.find((q) => q.key === 'regiao_residencia');
 
   function brazilParts(isoString) {
     const shifted = new Date(new Date(isoString).getTime() - TZ_OFFSET_MS);
@@ -352,6 +382,15 @@
       dmyHm: String(d).padStart(2, '0') + '/' + String(m + 1).padStart(2, '0') + '/' + y + ' ' + hh + ':' + mm,
       dow: shifted.getUTCDay(),
     };
+  }
+
+  // Segunda-feira da semana que contém dateKey ("YYYY-MM-DD") — usado pra agrupar o streamgraph
+  function weekKey(dateKey) {
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    const diffToMonday = (dt.getUTCDay() + 6) % 7;
+    dt.setUTCDate(dt.getUTCDate() - diffToMonday);
+    return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0') + '-' + String(dt.getUTCDate()).padStart(2, '0');
   }
 
   const RESPONSES = RAW_RESPONSES.map((r) => ({ ...r, parts: brazilParts(r.created_at) }));
@@ -713,6 +752,106 @@
     chartInstances.push(chart);
   }
 
+  // ---- Stream dos candidatos ao longo do tempo, por cargo ----
+  function computeStreamData(cargoKey) {
+    const q = QUESTIONS.find((qq) => qq.key === cargoKey);
+    if (!q) return null;
+    const filtered = RESPONSES.filter(matchesFilters);
+
+    const weekBuckets = new Map();
+    filtered.forEach((r) => {
+      const ans = answersByResponse.get(r.id);
+      const v = ans && ans.get(q.id);
+      if (!v) return;
+      const wk = weekKey(r.parts.dateKey);
+      if (!weekBuckets.has(wk)) weekBuckets.set(wk, new Map());
+      const bucket = weekBuckets.get(wk);
+      bucket.set(v, (bucket.get(v) || 0) + 1);
+    });
+    const weekKeys = [...weekBuckets.keys()].sort();
+    if (!weekKeys.length) return { labels: [], datasets: [] };
+
+    const datasets = q.options.map((o, idx) => ({
+      label: o.label,
+      color: CATEGORICAL_PALETTE[idx % CATEGORICAL_PALETTE.length],
+      data: weekKeys.map((wk) => weekBuckets.get(wk).get(o.value) || 0),
+    })).filter((ds) => ds.data.some((v) => v > 0));
+
+    const labels = weekKeys.map((wk) => { const p = wk.split('-'); return p[2] + '/' + p[1]; });
+    return { labels, datasets };
+  }
+
+  let streamChartInstance = null;
+  function buildStreamChart() {
+    const canvas = document.getElementById('streamChart');
+    const emptyNote = document.getElementById('streamEmptyNote');
+    if (!canvas) return;
+    if (streamChartInstance) { streamChartInstance.destroy(); streamChartInstance = null; }
+
+    const data = computeStreamData(selectedCargoKey);
+    if (!data || !data.datasets.length) {
+      canvas.style.display = 'none';
+      emptyNote.style.display = 'block';
+      return;
+    }
+    canvas.style.display = 'block';
+    emptyNote.style.display = 'none';
+
+    streamChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: data.labels,
+        datasets: data.datasets.map((ds) => ({
+          label: ds.label,
+          data: ds.data,
+          borderColor: ds.color,
+          backgroundColor: ds.color + 'cc',
+          fill: true,
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: ds.color,
+          pointHoverBorderColor: SURFACE,
+          pointHoverBorderWidth: 2,
+          tension: 0.35,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { color: INK_MUTED, font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+          y: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: INK_MUTED, font: { size: 11 } }, grid: { color: GRID } },
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 9, boxHeight: 9, padding: 12, font: { size: 11.5 }, color: INK_SECONDARY },
+          },
+          tooltip: {
+            backgroundColor: '#14171a', padding: 10, cornerRadius: 8, titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y}` },
+          },
+        },
+      },
+    });
+  }
+
+  function buildCargoSelector() {
+    const el = document.getElementById('cargoSelector');
+    const available = CARGO_DEFS.filter((c) => QUESTIONS.some((q) => q.key === c.key));
+    if (available.length && !available.some((c) => c.key === selectedCargoKey)) selectedCargoKey = available[0].key;
+    el.innerHTML = available.map((c) => `<span class="cargo-opt pressable${c.key === selectedCargoKey ? ' active' : ''}" data-key="${c.key}">${escapeHtml(c.label)}</span>`).join('');
+    el.querySelectorAll('.cargo-opt').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedCargoKey = btn.dataset.key;
+        el.querySelectorAll('.cargo-opt').forEach((b) => b.classList.toggle('active', b.dataset.key === selectedCargoKey));
+        buildStreamChart();
+      });
+    });
+  }
+
   function renderKpis(agg) {
     document.getElementById('topbarCount').textContent = agg.total.toLocaleString('pt-BR');
     animateValue(document.getElementById('kpiTotal'), agg.total);
@@ -791,6 +930,7 @@
     renderKpis(agg);
     buildTimelineChart(agg.timeline);
     buildDowChart(agg.dowCounts);
+    buildStreamChart();
     renderStatusSections(agg.statusSections);
     renderRankingCategories(agg.rankingCategories);
     renderRecentTable(agg.recent);
@@ -808,6 +948,7 @@
   document.getElementById('drawerClear').addEventListener('click', clearFilters);
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
 
+  buildCargoSelector();
   buildDrawerBody();
   renderAll();
   const dupEl = document.getElementById('kpiDuplicatas');

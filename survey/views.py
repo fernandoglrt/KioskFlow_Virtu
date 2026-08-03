@@ -75,6 +75,7 @@ class DashboardView(TemplateView):
         context['export_questions'] = [
             {
                 'id': q.id,
+                'key': q.key,
                 'label': q.label,
                 'category': q.category or 'Outras perguntas',
                 'type': q.question_type,
