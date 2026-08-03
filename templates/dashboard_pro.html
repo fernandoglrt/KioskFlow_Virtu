@@ -33,11 +33,40 @@
   body {
     margin: 0;
     background: var(--page);
+    background-image: radial-gradient(circle at 15% 0%, rgba(0,156,59,0.06), transparent 55%);
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     color: var(--ink);
     -webkit-font-smoothing: antialiased;
   }
   a { color: inherit; }
+
+  /* Superfície "skeuomórfica": leve gloss no topo + sombra dupla dando volume */
+  .surface {
+    position: relative;
+    background: var(--surface);
+    background-image: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 46%);
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.8) inset,
+      0 1px 2px rgba(20,23,26,0.04),
+      0 10px 28px rgba(20,23,26,0.06);
+    transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .surface-hover:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.9) inset,
+      0 2px 4px rgba(20,23,26,0.05),
+      0 18px 36px rgba(20,23,26,0.10),
+      0 0 0 1px rgba(0,156,59,0.14);
+  }
+
+  /* Botões e chips "pressáveis" */
+  .pressable {
+    transition: transform .12s ease, box-shadow .12s ease, background .15s ease;
+  }
+  .pressable:active { transform: translateY(1px) scale(0.98); }
 
   .topbar {
     background: linear-gradient(135deg, var(--brand-green-dark), var(--brand-green));
@@ -59,17 +88,47 @@
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
     padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: .87rem;
-    text-decoration: none; transition: background .2s;
+    text-decoration: none; transition: background .2s, transform .12s ease;
   }
   .topbar-back:hover { background: rgba(255,255,255,0.24); }
+  .topbar-back:active { transform: scale(0.97); }
 
   .wrap { max-width: 1400px; margin: 0 auto; padding: clamp(16px, 3vw, 32px); }
+
+  /* Barra de filtros ativos (cross-filter: clicar num gráfico filtra a tela toda) */
+  .filter-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-bottom: 22px; padding: 12px 14px;
+    background: linear-gradient(180deg, #ffffff, #fbfdfb);
+    border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 6px 16px rgba(20,23,26,0.05);
+  }
+  .filter-bar-label { font-size: .76rem; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(180deg, #e9f8ee, #dcf3e3);
+    color: var(--brand-green-dark); font-size: .82rem; font-weight: 600;
+    padding: 7px 8px 7px 14px; border-radius: 999px; border: 1px solid rgba(0,156,59,0.25);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 5px rgba(0,156,59,0.1);
+  }
+  .filter-chip .chip-q { color: var(--ink-muted); font-weight: 500; }
+  .filter-chip button {
+    all: unset; display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+    background: rgba(0,106,40,0.14); color: var(--brand-green-dark); font-size: .68rem;
+    transition: background .15s;
+  }
+  .filter-chip button:hover { background: rgba(0,106,40,0.26); }
+  .filter-clear {
+    font-size: .8rem; font-weight: 600; color: var(--ink-muted); cursor: pointer;
+    padding: 7px 12px; border-radius: 999px; border: 1px solid transparent; background: transparent;
+  }
+  .filter-clear:hover { background: var(--page); color: var(--ink); border-color: var(--line); }
 
   /* KPI tiles */
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
   .kpi-tile {
-    background: var(--surface); border-radius: 14px; padding: 20px 22px;
-    box-shadow: var(--shadow); border: 1px solid var(--line);
+    padding: 20px 22px;
     position: relative; overflow: hidden;
   }
   .kpi-tile::before {
@@ -91,30 +150,29 @@
   .section-title i { color: var(--brand-green); font-size: .95rem; }
   .section-title:first-of-type { margin-top: 0; }
 
-  .panel {
-    background: var(--surface); border-radius: 14px; padding: 22px;
-    box-shadow: var(--shadow); border: 1px solid var(--line);
-  }
+  .panel { padding: 22px; }
 
   .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
   .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
 
   .chart-card {
-    background: var(--surface); border-radius: 14px; padding: 18px 20px 8px;
-    border: 1px solid var(--line); box-shadow: var(--shadow);
+    padding: 18px 20px 8px;
     display: flex; flex-direction: column;
   }
   .chart-card h3 {
     font-size: .88rem; font-weight: 700; margin: 0 0 6px; color: var(--ink);
     line-height: 1.3;
   }
-  .chart-card .chart-meta { font-size: .74rem; color: var(--ink-muted); margin-bottom: 10px; }
-  .chart-canvas-wrap { position: relative; width: 100%; }
+  .chart-card .chart-meta { font-size: .74rem; color: var(--ink-muted); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .chart-canvas-wrap { position: relative; width: 100%; cursor: pointer; }
 
-  .status-card { background: var(--surface); border-radius: 14px; padding: 20px 22px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .status-card { padding: 20px 22px; }
   .status-card h3 { font-size: .92rem; font-weight: 700; margin: 0 0 4px; color: var(--ink); }
   .status-card .chart-meta { font-size: .74rem; color: var(--ink-muted); margin-bottom: 4px; }
-  .status-canvas-wrap { position: relative; width: 100%; margin-top: 6px; }
+  .status-canvas-wrap { position: relative; width: 100%; margin-top: 6px; cursor: pointer; }
+
+  .clickable-hint { font-size: .68rem; color: var(--ink-muted); opacity: 0; transition: opacity .15s; white-space: nowrap; }
+  .chart-card:hover .clickable-hint, .status-card:hover .clickable-hint { opacity: 1; }
 
   /* Timeline chart panel */
   .chart-wrap { position: relative; height: 280px; }
@@ -148,38 +206,51 @@
 
 <div class="wrap">
 
+  <!-- Filtros ativos (clique num gráfico pra filtrar a tela toda) -->
+  {% if active_filters %}
+  <div class="filter-bar">
+    <span class="filter-bar-label"><i class="fas fa-filter"></i> Filtrando por</span>
+    {% for f in active_filters %}
+    <span class="filter-chip"><span class="chip-q">{{ f.label }}:</span> {{ f.value }}
+      <button type="button" class="pressable" onclick="removeFilter('{{ f.token|escapejs }}')" aria-label="Remover filtro">✕</button>
+    </span>
+    {% endfor %}
+    <span class="filter-clear pressable" onclick="clearFilters()">Limpar tudo</span>
+  </div>
+  {% endif %}
+
   <!-- KPIs -->
   <div class="kpi-grid">
-    <div class="kpi-tile">
+    <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-users"></i></div>
       <p class="kpi-label">Total de respostas</p>
-      <p class="kpi-value">{{ total_respostas }}</p>
+      <p class="kpi-value" data-count="{{ total_respostas }}">0</p>
     </div>
-    <div class="kpi-tile">
+    <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-calendar-day"></i></div>
       <p class="kpi-label">Respostas hoje</p>
-      <p class="kpi-value">{{ respostas_hoje }}</p>
+      <p class="kpi-value" data-count="{{ respostas_hoje }}">0</p>
     </div>
-    <div class="kpi-tile">
+    <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-calendar-week"></i></div>
       <p class="kpi-label">Últimos 7 dias</p>
-      <p class="kpi-value">{{ respostas_7_dias }}</p>
+      <p class="kpi-value" data-count="{{ respostas_7_dias }}">0</p>
     </div>
-    <div class="kpi-tile">
+    <div class="kpi-tile surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-clock"></i></div>
       <p class="kpi-label">Última resposta</p>
       <p class="kpi-value" style="font-size: 1.25rem;">{% if ultima_resposta %}{{ ultima_resposta|date:"d/m/Y" }} <small>{{ ultima_resposta|date:"H:i" }}</small>{% else %}--{% endif %}</p>
     </div>
-    <div class="kpi-tile kpi-tile-warn">
+    <div class="kpi-tile kpi-tile-warn surface surface-hover">
       <div class="kpi-icon"><i class="fas fa-clone"></i></div>
       <p class="kpi-label">Duplicatas filtradas</p>
-      <p class="kpi-value">{{ total_duplicatas }}</p>
+      <p class="kpi-value" data-count="{{ total_duplicatas }}">0</p>
     </div>
   </div>
 
   <!-- Timeline -->
   <div class="section-title"><i class="fas fa-chart-area"></i>Respostas ao longo do tempo</div>
-  <div class="panel">
+  <div class="panel surface">
     <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
   </div>
 
@@ -188,9 +259,9 @@
   <div class="section-title"><i class="fas fa-gauge-high"></i>Avaliação</div>
   <div class="status-grid">
     {% for section in status_sections %}
-    <div class="status-card">
+    <div class="status-card surface surface-hover">
       <h3>{{ section.label }}</h3>
-      <p class="chart-meta">Distribuição das respostas, ruim → bom</p>
+      <p class="chart-meta"><span>Distribuição das respostas, ruim → bom</span><span class="clickable-hint"><i class="fas fa-hand-pointer"></i> clique pra filtrar</span></p>
       <div class="status-canvas-wrap"><canvas id="{{ section.id }}"></canvas></div>
     </div>
     {% endfor %}
@@ -202,9 +273,9 @@
   <div class="section-title"><i class="fas fa-chart-simple"></i>{{ cat.name }}</div>
   <div class="chart-grid">
     {% for chart in cat.charts %}
-    <div class="chart-card">
+    <div class="chart-card surface surface-hover">
       <h3>{{ chart.label }}</h3>
-      <p class="chart-meta">{{ chart.items|length }} opç{{ chart.items|length|pluralize:"ão,ões" }} de resposta</p>
+      <p class="chart-meta"><span>{{ chart.items|length }} opç{{ chart.items|length|pluralize:"ão,ões" }}</span><span class="clickable-hint"><i class="fas fa-hand-pointer"></i> clique pra filtrar</span></p>
       <div class="chart-canvas-wrap"><canvas id="{{ chart.id }}"></canvas></div>
     </div>
     {% endfor %}
@@ -213,7 +284,7 @@
 
   <!-- Últimas respostas -->
   <div class="section-title"><i class="fas fa-list"></i>Últimas respostas</div>
-  <div class="panel">
+  <div class="panel surface">
     {% if ultimas_respostas %}
     <table class="recent">
       <thead>
@@ -240,6 +311,63 @@
 {{ timeline_labels|json_script:"timeline-labels" }}
 {{ timeline_values|json_script:"timeline-values" }}
 {{ chart_specs_json|json_script:"chart-specs-data" }}
+{{ active_filters|json_script:"active-filters-data" }}
+<script>
+  // ---- Cross-filter: clicar numa barra/segmento filtra a tela toda ----
+  function navigateWithTokens(tokens) {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('f');
+    tokens.forEach((t) => params.append('f', t));
+    sessionStorage.setItem('dashScrollY', String(window.scrollY));
+    const qs = params.toString();
+    window.location.href = window.location.pathname + (qs ? '?' + qs : '');
+  }
+
+  function currentTokens() {
+    return new URLSearchParams(window.location.search).getAll('f');
+  }
+
+  function toggleFilter(questionId, value) {
+    const token = questionId + ':' + value;
+    const tokens = currentTokens();
+    const idx = tokens.indexOf(token);
+    if (idx >= 0) { tokens.splice(idx, 1); } else { tokens.push(token); }
+    navigateWithTokens(tokens);
+  }
+
+  function removeFilter(token) {
+    navigateWithTokens(currentTokens().filter((t) => t !== token));
+  }
+
+  function clearFilters() {
+    navigateWithTokens([]);
+  }
+
+  // Restaura a posição de scroll depois de um clique-filtro (a navegação é reload completo)
+  (function restoreScroll() {
+    const y = sessionStorage.getItem('dashScrollY');
+    if (y !== null) {
+      sessionStorage.removeItem('dashScrollY');
+      window.scrollTo(0, parseInt(y, 10));
+    }
+  })();
+
+  // Contador animado nos KPIs
+  (function animateCounters() {
+    document.querySelectorAll('.kpi-value[data-count]').forEach((el) => {
+      const target = parseInt(el.getAttribute('data-count'), 10) || 0;
+      const duration = 700;
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(eased * target).toLocaleString('pt-BR');
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  })();
+</script>
 <script>
 (function () {
   const INK_SECONDARY = '#52565c';
@@ -297,6 +425,12 @@
 
   // ---- Ranking bars + status (avaliação) bars ----
   const specs = JSON.parse(document.getElementById('chart-specs-data').textContent);
+  const activeFilters = JSON.parse(document.getElementById('active-filters-data').textContent);
+
+  function selectedValueFor(questionId) {
+    const hit = activeFilters.find((f) => f.token.indexOf(questionId + ':') === 0);
+    return hit ? hit.value : null;
+  }
 
   function sizeForBars(canvas, count) {
     const wrap = canvas.parentElement;
@@ -308,13 +442,18 @@
     if (!canvas) return;
     sizeForBars(canvas, spec.items.length);
     const maxValue = Math.max(...spec.items.map((i) => i.total), 1);
+    const selected = selectedValueFor(spec.question_id);
+    const colors = spec.items.map((i) => {
+      if (!selected) return BRAND_GREEN;
+      return i.label === selected ? BRAND_GREEN : 'rgba(0, 156, 59, 0.25)';
+    });
     new Chart(canvas, {
       type: 'bar',
       data: {
         labels: spec.items.map((i) => i.label),
         datasets: [{
           data: spec.items.map((i) => i.total),
-          backgroundColor: BRAND_GREEN,
+          backgroundColor: colors,
           borderRadius: 4,
           maxBarThickness: 22,
           categoryPercentage: 0.75,
@@ -326,6 +465,13 @@
         responsive: true,
         maintainAspectRatio: false,
         layout: { padding: { right: 8 } },
+        onClick: (evt, elements) => {
+          if (!elements.length) return;
+          toggleFilter(spec.question_id, spec.items[elements[0].index].label);
+        },
+        onHover: (evt, elements) => {
+          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -335,7 +481,7 @@
               title: (items) => spec.items[items[0].dataIndex].label,
               label: (ctx) => {
                 const item = spec.items[ctx.dataIndex];
-                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%)`;
+                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%) · clique pra filtrar`;
               },
             },
           },
@@ -361,22 +507,34 @@
     const canvas = document.getElementById(spec.id);
     if (!canvas) return;
     canvas.parentElement.style.height = '54px';
+    const selected = selectedValueFor(spec.question_id);
     new Chart(canvas, {
       type: 'bar',
       data: {
         labels: [''],
-        datasets: spec.items.map((item) => ({
-          label: item.label,
-          data: [item.pct],
-          backgroundColor: STATUS_COLORS[item.status] || STATUS_COLORS.neutral,
-          borderRadius: 3,
-          maxBarThickness: 40,
-        })),
+        datasets: spec.items.map((item) => {
+          const base = STATUS_COLORS[item.status] || STATUS_COLORS.neutral;
+          const dimmed = selected && item.label !== selected;
+          return {
+            label: item.label,
+            data: [item.pct],
+            backgroundColor: dimmed ? base + '55' : base,
+            borderRadius: 3,
+            maxBarThickness: 40,
+          };
+        }),
       },
       options: {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        onClick: (evt, elements) => {
+          if (!elements.length) return;
+          toggleFilter(spec.question_id, spec.items[elements[0].datasetIndex].label);
+        },
+        onHover: (evt, elements) => {
+          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
         plugins: {
           legend: {
             position: 'bottom', align: 'start',
@@ -389,7 +547,7 @@
               title: (items) => spec.items[items[0].datasetIndex].label,
               label: (ctx) => {
                 const item = spec.items[ctx.datasetIndex];
-                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%)`;
+                return ` ${item.total} resposta${item.total === 1 ? '' : 's'} (${item.pct}%) · clique pra filtrar`;
               },
             },
           },

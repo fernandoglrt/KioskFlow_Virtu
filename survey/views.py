@@ -70,6 +70,22 @@ class DashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         responses = PesquisaGravatai.objects.filter(is_duplicate=False)
+
+        active_filters = []
+        for token in self.request.GET.getlist('f'):
+            qid_str, _, value = token.partition(':')
+            if not value or not qid_str.isdigit():
+                continue
+            question = Question.objects.filter(id=int(qid_str)).first()
+            if question is None:
+                continue
+            responses = responses.filter(answers__question_id=question.id, answers__value__icontains=value)
+            active_filters.append({'token': token, 'label': question.label, 'value': value})
+        responses = responses.distinct()
+        response_ids = list(responses.values_list('id', flat=True))
+
+        context['active_filters'] = active_filters
+
         total = responses.count()
         context['total_respostas'] = total
         context['total_duplicatas'] = PesquisaGravatai.objects.filter(is_duplicate=True).count()
@@ -106,7 +122,7 @@ class DashboardView(TemplateView):
             .order_by('order', 'id')
         )
         for question in questions:
-            answers_qs = Answer.objects.filter(question=question, response__is_duplicate=False).exclude(value='')
+            answers_qs = Answer.objects.filter(question=question, response_id__in=response_ids).exclude(value='')
             counter = Counter()
             if question.question_type == Question.CHECKBOX_MULTI:
                 for value in answers_qs.values_list('value', flat=True):
@@ -136,7 +152,9 @@ class DashboardView(TemplateView):
                             'pct': round(counter[v] / total * 100, 1) if total else 0,
                             'status': opt.status or 'neutral',
                         })
-                status_sections.append({'id': chart_id, 'label': question.label, 'items': items})
+                status_sections.append(
+                    {'id': chart_id, 'question_id': question.id, 'label': question.label, 'items': items}
+                )
             elif counter:
                 items = [
                     {'label': label, 'total': qty, 'pct': round(qty / total * 100, 1) if total else 0}
@@ -146,7 +164,9 @@ class DashboardView(TemplateView):
                 if category not in charts_by_category:
                     charts_by_category[category] = []
                     category_order.append(category)
-                charts_by_category[category].append({'id': chart_id, 'label': question.label, 'items': items})
+                charts_by_category[category].append(
+                    {'id': chart_id, 'question_id': question.id, 'label': question.label, 'items': items}
+                )
 
         ranking_categories = [
             {'name': name, 'charts': charts_by_category[name]} for name in category_order
