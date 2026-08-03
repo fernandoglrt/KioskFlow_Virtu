@@ -136,8 +136,8 @@
 
   /* Seletor de cargo (streamgraph) */
   .header-controls { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; text-transform: none; letter-spacing: normal; }
-  .cargo-selector, .granularity-selector, .accumulation-selector { display: flex; gap: 4px; }
-  .accumulation-selector { padding-right: 10px; border-right: 1px solid var(--line); }
+  .cargo-selector, .granularity-selector, .accumulation-selector, .chart-type-selector { display: flex; gap: 4px; }
+  .chart-type-selector, .accumulation-selector { padding-right: 10px; border-right: 1px solid var(--line); }
   .cargo-opt {
     font-size: .78rem; font-weight: 600; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line);
     background: var(--surface); color: var(--ink-muted); cursor: pointer;
@@ -287,19 +287,10 @@
     </div>
   </div>
 
-  <div class="section-title"><i class="fas fa-chart-area"></i>Respostas ao longo do tempo</div>
-  <div class="split-grid">
-    <div class="panel surface">
-      <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
-    </div>
-    <div class="panel surface">
-      <div class="chart-wrap"><canvas id="dowChart"></canvas></div>
-    </div>
-  </div>
-
   <div class="section-title">
     <i class="fas fa-water"></i>Evolução dos candidatos
     <span class="header-controls">
+      <span class="chart-type-selector" id="chartTypeSelector"></span>
       <span class="accumulation-selector" id="accumulationSelector"></span>
       <span class="granularity-selector" id="granularitySelector"></span>
       <span class="cargo-selector" id="cargoSelector"></span>
@@ -309,6 +300,16 @@
     <div class="chart-wrap" style="height: 340px;">
       <canvas id="streamChart"></canvas>
       <p class="empty-note" id="streamEmptyNote" style="display:none; text-align:center; padding-top:130px;">Sem dados suficientes pra esse cargo com os filtros atuais.</p>
+    </div>
+  </div>
+
+  <div class="section-title"><i class="fas fa-chart-area"></i>Respostas ao longo do tempo</div>
+  <div class="split-grid">
+    <div class="panel surface">
+      <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
+    </div>
+    <div class="panel surface">
+      <div class="chart-wrap"><canvas id="dowChart"></canvas></div>
     </div>
   </div>
 
@@ -373,7 +374,9 @@
   const GRANULARITY_DEFS = [{ key: 'day', label: 'Dia' }, { key: 'month', label: 'Mês' }];
   let selectedGranularity = 'month';
   const ACCUMULATION_DEFS = [{ key: 'period', label: 'Por período' }, { key: 'cumulative', label: 'Acumulado' }];
-  let selectedAccumulation = 'period';
+  let selectedAccumulation = 'cumulative';
+  const CHART_TYPE_DEFS = [{ key: 'stream', label: 'Stream' }, { key: 'ranking', label: 'Ranking' }];
+  let selectedChartType = 'stream';
 
   Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
@@ -801,8 +804,26 @@
       });
     }
 
+    // Quem está na frente (maior valor no último período) fica por último no array —
+    // no stream empilhado isso põe a cor de quem lidera no topo, mais visível.
+    datasets.sort((a, b) => a.data[a.data.length - 1] - b.data[b.data.length - 1]);
+
     const labels = bucketKeys.map((bk) => bucketLabelFor(bk, selectedGranularity));
     return { labels, datasets };
+  }
+
+  // Posição (1º, 2º, 3º...) de cada candidato em cada período, pro gráfico de ranking
+  function computeRankData(cargoKey) {
+    const base = computeStreamData(cargoKey);
+    if (!base || !base.datasets.length) return null;
+    const n = base.labels.length;
+    const rankDatasets = base.datasets.map((ds) => ({ label: ds.label, color: ds.color, data: new Array(n).fill(null), values: ds.data }));
+    for (let i = 0; i < n; i++) {
+      const atI = base.datasets.map((ds, idx) => ({ idx, v: ds.data[i] }));
+      atI.sort((a, b) => b.v - a.v);
+      atI.forEach((item, pos) => { rankDatasets[item.idx].data[i] = pos + 1; });
+    }
+    return { labels: base.labels, datasets: rankDatasets, n: base.datasets.length };
   }
 
   let streamChartInstance = null;
@@ -811,6 +832,19 @@
     const emptyNote = document.getElementById('streamEmptyNote');
     if (!canvas) return;
     if (streamChartInstance) { streamChartInstance.destroy(); streamChartInstance = null; }
+
+    if (selectedChartType === 'ranking') {
+      const rankData = computeRankData(selectedCargoKey);
+      if (!rankData || !rankData.datasets.length) {
+        canvas.style.display = 'none';
+        emptyNote.style.display = 'block';
+        return;
+      }
+      canvas.style.display = 'block';
+      emptyNote.style.display = 'none';
+      streamChartInstance = buildRankChart(canvas, rankData);
+      return;
+    }
 
     const data = computeStreamData(selectedCargoKey);
     if (!data || !data.datasets.length) {
@@ -862,6 +896,60 @@
     });
   }
 
+  // Gráfico de ranking (bump chart): cada candidato é uma linha na posição
+  // (1º, 2º, 3º...) — quando uma linha cruza a outra, é a virada.
+  function buildRankChart(canvas, rankData) {
+    return new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: rankData.labels,
+        datasets: rankData.datasets.map((ds) => ({
+          label: ds.label,
+          data: ds.data,
+          borderColor: ds.color,
+          backgroundColor: ds.color,
+          fill: false,
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: ds.color,
+          pointBorderColor: SURFACE,
+          pointBorderWidth: 1.5,
+          pointHoverRadius: 6,
+          tension: 0,
+          _values: ds.values,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: INK_MUTED, font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+          y: {
+            reverse: true, min: 1, max: rankData.n,
+            ticks: { stepSize: 1, precision: 0, color: INK_MUTED, font: { size: 11 }, callback: (v) => (Number.isInteger(v) ? v + 'º' : '') },
+            grid: { color: GRID },
+          },
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 11.5 }, color: INK_SECONDARY },
+          },
+          tooltip: {
+            backgroundColor: '#14171a', padding: 10, cornerRadius: 8, titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+            callbacks: {
+              label: (ctx) => {
+                const val = ctx.dataset._values ? ctx.dataset._values[ctx.dataIndex] : null;
+                return ` ${ctx.dataset.label}: ${ctx.parsed.y}º lugar${val !== null ? ` (${val})` : ''}`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   function buildCargoSelector() {
     const el = document.getElementById('cargoSelector');
     const available = CARGO_DEFS.filter((c) => QUESTIONS.some((q) => q.key === c.key));
@@ -895,6 +983,18 @@
       btn.addEventListener('click', () => {
         selectedAccumulation = btn.dataset.acc;
         el.querySelectorAll('.cargo-opt').forEach((b) => b.classList.toggle('active', b.dataset.acc === selectedAccumulation));
+        buildStreamChart();
+      });
+    });
+  }
+
+  function buildChartTypeSelector() {
+    const el = document.getElementById('chartTypeSelector');
+    el.innerHTML = CHART_TYPE_DEFS.map((c) => `<span class="cargo-opt pressable${c.key === selectedChartType ? ' active' : ''}" data-type="${c.key}">${escapeHtml(c.label)}</span>`).join('');
+    el.querySelectorAll('.cargo-opt').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedChartType = btn.dataset.type;
+        el.querySelectorAll('.cargo-opt').forEach((b) => b.classList.toggle('active', b.dataset.type === selectedChartType));
         buildStreamChart();
       });
     });
@@ -999,6 +1099,7 @@
   buildCargoSelector();
   buildGranularitySelector();
   buildAccumulationSelector();
+  buildChartTypeSelector();
   buildDrawerBody();
   renderAll();
   const dupEl = document.getElementById('kpiDuplicatas');
